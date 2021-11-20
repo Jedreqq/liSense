@@ -1,0 +1,25 @@
+{
+  "name": "lisenseapp",
+  "version": "1.0.0",
+  "description": "Web app for driving schools management.",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon server/app.js"
+  },
+  "keywords": [
+    "wep",
+    "app",
+    "driving",
+    "school",
+    "management"
+  ],
+  "author": "Jedreqq",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.17.1"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.15"
+  }
+}
