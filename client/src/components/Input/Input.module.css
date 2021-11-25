@@ -4,17 +4,24 @@
   }
   
   .input label {
-    display: block;
+    display: inline-block;
     text-transform: uppercase;
     margin-bottom: 0.25rem;
   }
+  .input input[type='checkbox'] {
+    width: auto;
+    display: inline-block;
+  }
+
   
+
   .input input,
   .input textarea {
     display: block;
     font: inherit;
-    padding: 0.25rem 0.5rem;
+    padding: 0.25rem;
     width: 100%;
     border-radius: 3px;
     border: 1px solid #ccc;
   }
+

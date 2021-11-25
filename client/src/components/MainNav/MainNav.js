@@ -10,12 +10,12 @@ const MainNav = (props) => {
       <nav className={classes.nav}>
         <ul>
           <li>
-            <NavLink to="/login" activeClassName={classes.active}>
+            <NavLink to="/login"  className={classes.active}>
               Login
             </NavLink>
           </li>
           <li>
-            <NavLink to="/signup" activeClassName={classes.active}>
+            <NavLink to="/signup" className={classes.active}>
               Signup
             </NavLink>
           </li>

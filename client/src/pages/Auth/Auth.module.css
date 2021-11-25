@@ -1,15 +1,24 @@
 .auth_form {
-    width: 90%;
+    width: 100%;
     margin: auto;
     padding: 1rem;
     border: 1px solid #3b0062;
     border-radius: 5px;
+    background-color: rgba(192, 198, 201, 0.062);
+
 }
 
-.auth_form form div:last-child {
+.auth_form form .btndiv {
     text-align: center;
     margin-top: 1rem;
 }
 .auth_form form div:last-child button {
     width: 10rem;
+}
+
+.signupBox {
+    display: grid;
+    grid-template-columns: 45% 45%;
+    gap: 0 2rem;
+
 }
