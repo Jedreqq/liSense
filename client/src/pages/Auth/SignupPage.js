@@ -3,7 +3,6 @@ import Button from "../../components/Button/Button";
 import Input from "../../components/Input/Input";
 import Auth from "./Auth";
 import classes from "./Auth.module.css";
-import { useNavigate } from 'react-router-dom';
 
 // const initialValues = {
 //   role: "student",
@@ -30,52 +29,22 @@ const SignupPage = (props) => {
     confirmpassword: "",
   });
 
-  const navigate = useNavigate();
-  
-  const signupHandler = (e) => {
-    e.preventDefault();
-    console.log("Trying to sign up.");
-    fetch("http://localhost:3001/auth/signup", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        role: signupData.role,
-        email: signupData.email,
-        password: signupData.password,
-        firstname: signupData.firstname,
-        lastname: signupData.lastname,
-        usercity: signupData.usercity,
-        postalcode: signupData.postalcode,
-        phonenumber: signupData.phonenumber,
-        confirmpassword: signupData.confirmpassword,
-      }),
-    })
-      .then((res) => {
-        if (res.status === 422) {
-          throw new Error(
-            "Validation failed. Make sure the email address isn't used yet!"
-          );
-        }
-        if (res.status !== 200 && res.status !== 201) {
-          console.log("Error!");
-          throw new Error("Creating a user failed!");
-        }
-        return res.json();
-      })
-      .then((resData) => {
-        console.log(resData);
-        navigate('/login');
-       })
-      .catch((err) => console.log(err));
-  };
 
   let isInstructor = signupData.role === "instructor";
 
   return (
     <Auth>
-      <form onSubmit={signupHandler}>
+      <form onSubmit={e => props.onSignup(e, {
+         role: signupData.role,
+         email: signupData.email,
+         password: signupData.password,
+         firstname: signupData.firstname,
+         lastname: signupData.lastname,
+         usercity: signupData.usercity,
+         postalcode: signupData.postalcode,
+         phonenumber: signupData.phonenumber,
+         confirmpassword: signupData.confirmpassword,
+      })}>
         <div>
           <label>YOUR ROLE </label>
           <br />
@@ -144,7 +113,7 @@ const SignupPage = (props) => {
           <Input
             id="postalcode"
             label="Postal Code"
-            type="number"
+            type="text"
             control="input"
             onChange={(e) => {
               setSignupData({ ...signupData, postalcode: e.target.value });

@@ -6,4 +6,6 @@ const userController = require('../controllers/user');
 
 router.get('/dashboard', verifyToken, userController.getDashboard);
 
+router.put('/createSchool', verifyToken, isOwner, userController.createSchool);
+
 module.exports = router;

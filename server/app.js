@@ -5,6 +5,10 @@ const sequelize = require("./util/database");
 var cors = require("cors");
 const app = express();
 
+const User = require('./models/user');
+const School = require('./models/school');
+const Branch = require('./models/branch');
+
 const authRoutes = require("./routes/auth");
 const userRoutes = require("./routes/user");
 
@@ -25,7 +29,7 @@ app.use(bodyParser.json());
 // });
 
 app.use("/auth", authRoutes);
-app.use("/user", userRoutes);
+app.use(userRoutes);
 
 app.use((error, req, res, next) => {
   const status = error.statusCode || 500;
@@ -37,6 +41,15 @@ app.use((error, req, res, next) => {
 app.get("/api", (req, res, next) => {
   res.json({ message: "Server is here." });
 });
+
+User.hasOne(School);
+School.belongsTo(User);
+
+School.hasMany(Branch);
+Branch.belongsTo(School);
+
+
+
 
 sequelize
   .sync()

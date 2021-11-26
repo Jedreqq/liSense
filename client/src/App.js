@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
-import { Routes, Navigate, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import "./App.css";
-import Button from "./components/Button/Button";
+//import Button from "./components/Button/Button";
 import Layout from "./components/Layout/Layout";
 import LoginPage from "./pages/Auth/LoginPage";
 import SignupPage from "./pages/Auth/SignupPage";
 import Dashboard from "./pages/Dashboard/Dashboard";
-import HomePage from './pages/Auth/HomePage';
+import HomePage from "./pages/Auth/HomePage";
+import { useNavigate } from 'react-router-dom'
 function App() {
   const [loginStatus, setLoginStatus] = useState({
     isAuth: false,
@@ -27,15 +28,57 @@ function App() {
     }
     const userId = localStorage.getItem("userId");
     const userRole = localStorage.getItem("role");
-   // const remainingTime = new Date(expireDate).getTime() - new Date().getTime();
-    setLoginStatus({
+    // const remainingTime = new Date(expireDate).getTime() - new Date().getTime();
+    setLoginStatus((loginStatus) => ({
       ...loginStatus,
       isAuth: true,
       token: token,
       userId: userId,
       userRole: userRole,
-    });
+    })); //use setState(state => ({...state,,,})) for preventing the useeffect setstate inf loop 
   }, []);
+
+
+  const navigate = useNavigate();
+  
+  const signupHandler = (e, signupData) => {
+    e.preventDefault();
+    console.log("Trying to sign up.");
+    fetch("http://localhost:3001/auth/signup", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        role: signupData.role,
+        email: signupData.email,
+        password: signupData.password,
+        firstname: signupData.firstname,
+        lastname: signupData.lastname,
+        usercity: signupData.usercity,
+        postalcode: signupData.postalcode,
+        phonenumber: signupData.phonenumber,
+        confirmpassword: signupData.confirmpassword,
+      }),
+    })
+      .then((res) => {
+        if (res.status === 422) {
+          throw new Error(
+            "Validation failed. Make sure the email address isn't used yet!"
+          );
+        }
+        if (res.status !== 200 && res.status !== 201) {
+          console.log("Error!");
+          throw new Error("Creating a user failed!");
+        }
+        return res.json();
+      })
+      .then((resData) => {
+        console.log(resData);
+        navigate('/login');
+       })
+      .catch((err) => console.log(err));
+  };
 
   const loginHandler = (e, loginData) => {
     e.preventDefault();
@@ -92,25 +135,31 @@ function App() {
 
   let routes = (
     <Routes>
-      <Route path="/" exact element={<HomePage/>}></Route>
+      <Route path="/" exact element={<HomePage />}></Route>
       <Route
         path="/login"
         exact
         element={<LoginPage onLogin={loginHandler} />}
       ></Route>
-      <Route path="/signup" exact element={<SignupPage />}></Route>
+      <Route path="/signup" exact element={<SignupPage onSignup={signupHandler} />}></Route>
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>
   );
   if (loginStatus.isAuth) {
     routes = (
       <Routes>
-        <Route path="/user/dashboard" exact element={<Dashboard loginStatus={loginStatus} onLogout={logoutHandler} />} />
-        <Route path="*" element={<Navigate to="/user/dashboard" />} />
+        <Route
+          path="/dashboard"
+          exact
+          element={
+            <Dashboard loginStatus={loginStatus} onLogout={logoutHandler} />
+          }
+        />
+        <Route  path="*" element={<Navigate to="/dashboard" />} />
       </Routes>
     );
   }
-  return <Layout>{routes}</Layout>;
+  return <Layout onLogout={logoutHandler} loginStatus={loginStatus}>{routes}</Layout>;
 }
 
 export default App;

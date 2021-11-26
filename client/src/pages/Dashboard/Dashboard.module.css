@@ -1,0 +1,17 @@
+.createSchoolForm {
+  width: 50%;
+  margin: auto;
+  padding: 1rem;
+  border: 1px solid #3b0062;
+  border-radius: 5px;
+  background-color: rgba(192, 198, 201, 0.062);
+}
+
+.btndiv {
+  text-align: center;
+  margin-top: 1rem;
+}
+
+div:last-child button {
+  width: 10rem;
+}

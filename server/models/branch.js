@@ -2,37 +2,15 @@ const { Sequelize, DataTypes } = require("sequelize");
 
 const sequelize = require("../util/database");
 
-const roles = ["student", "instructor", "owner", "admin"];
-
-const User = sequelize.define("user", {
+const Branch = sequelize.define("branch", {
   _id: {
     type: DataTypes.INTEGER,
-    autoIncrement: true,
     allowNull: false,
+    autoIncrement: true,
     primaryKey: true,
   },
-  email: {
+  name: {
     type: DataTypes.STRING,
-    allowNull: false,
-  },
-  password: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
-  role: {
-    type: DataTypes.ENUM(roles),
-    allowNull: false,
-  },
-  firstname: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
-  lastname: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
-  phoneNumber: {
-    type: DataTypes.INTEGER,
     allowNull: false,
   },
   city: {
@@ -43,7 +21,14 @@ const User = sequelize.define("user", {
     type: DataTypes.STRING,
     allowNull: false,
   },
+  address: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  phoneNumber: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+  },
 });
 
-
-module.exports = User;
+module.exports = Branch;

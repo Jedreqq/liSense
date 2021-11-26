@@ -23,3 +23,8 @@ exports.getDashboard = (req, res, next) => {
       next(err);
     });
 };
+
+
+exports.createSchool = (req, res, next) => {
+
+};
