@@ -12,6 +12,10 @@ const School = sequelize.define('school', {
     name: {
         type: DataTypes.STRING,
         allowNull: false
+    },
+    owner: {
+        type: DataTypes.STRING,
+        allowNull: false
     }
 });
 

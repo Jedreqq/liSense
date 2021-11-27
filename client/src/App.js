@@ -8,6 +8,7 @@ import SignupPage from "./pages/Auth/SignupPage";
 import Dashboard from "./pages/Dashboard/Dashboard";
 import HomePage from "./pages/Auth/HomePage";
 import { useNavigate } from 'react-router-dom'
+import School from "./pages/School/School";
 function App() {
   const [loginStatus, setLoginStatus] = useState({
     isAuth: false,
@@ -155,6 +156,7 @@ function App() {
             <Dashboard loginStatus={loginStatus} onLogout={logoutHandler} />
           }
         />
+        <Route path="/school" exact element={<School />} />
         <Route  path="*" element={<Navigate to="/dashboard" />} />
       </Routes>
     );

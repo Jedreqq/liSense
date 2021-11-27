@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Input from "../../components/Input/Input";
 import Button from "../../components/Button/Button";
-import classes from './Dashboard.module.css';
+import classes from "./Dashboard.module.css";
 
 const Dashboard = (props) => {
   const [role, setRole] = useState("");
-  const [hasCreatedSchool, setHasCreatedSchool] = useState(null);
+  const [schoolName, setSchoolName] = useState("");
+  const [hasCreatedSchool, setHasCreatedSchool] = useState(false); //if school created by owner he gets redirected to his school
+  const navigate = useNavigate();
   useEffect(() => {
     fetch("http://localhost:3001/dashboard", {
       headers: {
@@ -20,8 +23,36 @@ const Dashboard = (props) => {
       })
       .then((resData) => {
         setRole(resData.role);
+        setHasCreatedSchool(resData.hasSchool);
+        if (role === "owner" && hasCreatedSchool) {
+          navigate("/school");
+        }
       });
-  }, [props.loginStatus.token]);
+  }, [props.loginStatus.token, hasCreatedSchool, navigate, role]);
+
+  const createSchoolHandler = (e) => {
+    e.preventDefault();
+    fetch("http://localhost:3001/createSchool", {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + props.loginStatus.token,
+      },
+      body: JSON.stringify({
+        name: schoolName,
+      }),
+    })
+      .then((res) => {
+        if ((res.status !== 200) & (res.status !== 201)) {
+          console.log("Error!");
+          throw new Error("Creating new school failed.");
+        }
+        return res.json();
+      })
+      .then((resData) => {
+        console.log(resData);
+      });
+  };
 
   let isStudent = role === "student";
   let isInstructor = role === "instructor";
@@ -42,29 +73,22 @@ const Dashboard = (props) => {
             Great! Let's create your group by entering the general information
             about your driving school...
           </p>
-          <form className={classes.createSchoolForm}>
+          <form
+            onSubmit={createSchoolHandler}
+            className={classes.createSchoolForm}
+          >
             <Input
               id="schoolname"
               label="Driving School Name"
               type="text"
               control="input"
+              onChange={(e) => {
+                setSchoolName(e.target.value);
+              }}
             />
-            {/* <Input id="schoolcity" label="City" type="text" control="input" />
-            <Input
-              id="schoolpostalcode"
-              label="Postal Code"
-              type="text"
-              control="input"
-            />
-            <Input
-              id="schooladdress"
-              label="Address"
-              type="text"
-              control="input"
-            /> */}
-             <div className={classes.btndiv}>
-          <Button type="submit">Create School</Button>
-        </div>
+            <div className={classes.btndiv}>
+              <Button type="submit">Create School</Button>
+            </div>
           </form>
         </div>
       )}

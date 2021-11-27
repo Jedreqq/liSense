@@ -8,4 +8,6 @@ router.get('/dashboard', verifyToken, userController.getDashboard);
 
 router.put('/createSchool', verifyToken, isOwner, userController.createSchool);
 
+router.get('/school/:schoolId', verifyToken)
+
 module.exports = router;
