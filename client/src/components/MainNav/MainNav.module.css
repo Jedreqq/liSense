@@ -36,4 +36,9 @@
   .nav a.active {
     color: #e6fcfc;
   }
+
+  .schoolNameNav {
+    font-size: 10px;
+    color: #e6fcfc;
+  }
   
