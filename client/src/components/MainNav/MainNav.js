@@ -3,7 +3,6 @@ import classes from "./MainNav.module.css";
 
 const MainNav = (props) => {
   let isAuth = props.loginStatus.isAuth;
-  
   return (
     <header className={classes.header}>
       <NavLink to="/" style={{ textDecoration: "none" }}>

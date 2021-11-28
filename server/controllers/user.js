@@ -1,3 +1,4 @@
+const Branch = require("../models/branch");
 const School = require("../models/school");
 const User = require("../models/user");
 
@@ -23,8 +24,8 @@ exports.getDashboard = (req, res, next) => {
             console.log("test dupa jest szkola");
             hasSchool = true;
             console.log(hasSchool);
-            res.status(200).json({ role: user.role, hasSchool: hasSchool });
           }
+          res.status(200).json({ role: user.role, hasSchool: hasSchool });
         });
       } else if (user.role === "student" || user.role === "instructor") {
         res.status(200).json({ role: user.role });
@@ -100,31 +101,99 @@ exports.getSchool = (req, res, next) => {
 };
 
 exports.getOwnerBranches = (req, res, next) => {
-  School.findOne({ where: { userId: req.userId } }).then((school) => {
-    if (!school) {
-      const error = new Error("School not found.");
-      error.statusCode = 404;
-      throw error;
-    }
-    if (school.userId !== req.userId) {
-      const error = new Error("Invalid user");
-      error.statusCode = 404;
-      throw error;
-    }
-    school.getBranches().then((branches) => {
+  School.findOne({ where: { userId: req.userId } })
+    .then((school) => {
+      if (!school) {
+        const error = new Error("School not found.");
+        error.statusCode = 404;
+        throw error;
+      }
+      if (school.userId !== req.userId) {
+        const error = new Error("Invalid user");
+        error.statusCode = 404;
+        throw error;
+      }
+      school.getBranches().then((branches) => {
+        if (!branches) {
+          return res
+            .status(200)
+            .json({ message: "No branches found.", branches: null });
+        }
+        res.status(200).json({
+          message: "Branches found successfully.",
+          branches: branches,
+        });
+      });
+    })
+    .catch((err) => {
+      if (!err.statusCode) {
+        err.statusCode = 500;
+      }
+      next(err);
+    });
+};
+
+exports.createBranch = (req, res, next) => {
+  const name = req.body.name;
+  const city = req.body.city;
+  const postalCode = req.body.postalCode;
+  const address = req.body.address;
+  const phoneNumber = req.body.phoneNumber;
+
+  School.findOne({ where: { userId: req.userId } })
+    .then((school) => {
+      if (!school) {
+        const error = new Error("School not found.");
+        error.statusCode = 404;
+        throw error;
+      }
+      if (school.userId !== req.userId) {
+        const error = new Error("Invalid user");
+        error.statusCode = 404;
+        throw error;
+      }
+      console.log(school);
+
+      const branch = new Branch({
+        name: name,
+        city: city,
+        postalCode: postalCode,
+        address: address,
+        phoneNumber: phoneNumber,
+        schoolId: school._id,
+      });
+      const result = branch.save();
+      res
+        .status(201)
+        .json({ message: "Branch created successfully.", branch: result });
+    })
+    .catch((err) => {
+      if (!err.statusCode) {
+        err.statusCode = 500;
+      }
+      next(err);
+    });
+};
+
+exports.getBranchesList = (req, res, next) => {
+  Branch.findAll()
+    .then((branches) => {
       if (!branches) {
-        return res
-          .status(200)
-          .json({ message: "No branches found.", branches: null });
+        const error = new Error("Branches are not found.");
+        error.statusCode = 404;
+        throw error;
       }
       res
         .status(200)
-        .json({ message: "Branches found successfully.", branches: branches });
+        .json({
+          message: "Fetched branches successfully.",
+          branches: branches,
+        });
+    })
+    .catch((err) => {
+      if (!err.statusCode) {
+        err.statusCode = 500;
+      }
+      next(err);
     });
-  }).catch(err =>  {
-    if(!err.statusCode) {
-      err.statusCode = 500;
-    }
-    next(err);
-  });
 };

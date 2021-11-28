@@ -1,0 +1,13 @@
+.btndiv {
+  text-align: center;
+  margin-top: 1rem;
+}
+
+.branchDiv {
+    width: 100%;
+    margin: auto;
+    padding: 1rem;
+    border: 1px solid #3b0062;
+    border-radius: 5px;
+    background-color: rgba(207, 213, 216, 0.062);
+}

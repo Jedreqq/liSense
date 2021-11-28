@@ -12,4 +12,8 @@ router.get('/school', verifyToken, userController.getSchool);
 
 router.get('/ownerBranches', verifyToken, isOwner, userController.getOwnerBranches);
 
+router.post('/branch', verifyToken, isOwner, userController.createBranch);
+
+router.get('/branchesList', verifyToken, userController.getBranchesList);
+
 module.exports = router;

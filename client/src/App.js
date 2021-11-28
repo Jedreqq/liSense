@@ -18,6 +18,8 @@ function App() {
     userRole: null,
   });
 
+  const [activeBranch, setActiveBranch] = useState(null);
+
   useEffect(() => {
     const token = localStorage.getItem("token");
     const expireDate = localStorage.getItem("expireDate");
@@ -42,6 +44,13 @@ function App() {
 
 
   const navigate = useNavigate();
+  
+  const activeBranchHandler = (e, activeBranch) => {
+    e.preventDefault();
+    setActiveBranch(activeBranch);
+    console.log('Changed.');
+  }
+  console.log(activeBranch);
   
   const signupHandler = (e, signupData) => {
     e.preventDefault();
@@ -133,6 +142,7 @@ function App() {
     localStorage.removeItem("expireDate");
     localStorage.removeItem("userId");
     localStorage.removeItem("userRole");
+    setActiveBranch(null);
   };
 
   let routes = (
@@ -158,7 +168,7 @@ function App() {
           }
         />
         <Route path="/school" exact element={<School loginStatus={loginStatus} />} />
-        <Route path="/branches" exact element={<Branches loginStatus={loginStatus}/>}/>
+        <Route path="/branches" exact element={<Branches onActiveBranchChange={activeBranchHandler} loginStatus={loginStatus}/>}/>
         <Route  path="*" element={<Navigate to="/dashboard" />} />
       </Routes>
     );

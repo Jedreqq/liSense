@@ -3,11 +3,13 @@ import { useNavigate } from "react-router-dom";
 import Input from "../../components/Input/Input";
 import Button from "../../components/Button/Button";
 import classes from "./Dashboard.module.css";
+import Branch from "../../components/Branch/Branch";
 
 const Dashboard = (props) => {
   const [role, setRole] = useState("");
   const [schoolName, setSchoolName] = useState("");
   const [hasCreatedSchool, setHasCreatedSchool] = useState(false); //if school created by owner he gets redirected to his school
+  const [allBranches, setAllBranches] = useState([]);
   const navigate = useNavigate();
   useEffect(() => {
     fetch("http://localhost:3001/dashboard", {
@@ -28,6 +30,28 @@ const Dashboard = (props) => {
           navigate("/school");
         }
       });
+
+    fetch("http://localhost:3001/branchesList", {
+      headers: {
+        Authorization: "Bearer " + props.loginStatus.token,
+      },
+    })
+      .then((res) => {
+        if (res.status !== 200) {
+          throw new Error("Failed to fetch branches.");
+        }
+        return res.json();
+      })
+      .then((resData) => {
+        setAllBranches(
+          resData.branches.map((branch) => {
+            return {
+              ...branch,
+            };
+          })
+        );
+      })
+      .catch((err) => console.log(err));
   }, [props.loginStatus.token, hasCreatedSchool, navigate, role]);
 
   const createSchoolHandler = (e) => {
@@ -62,10 +86,26 @@ const Dashboard = (props) => {
     <div>
       <p>Hello there, authenticated man, are you a {role}? </p>
       {(isStudent || isInstructor) && (
-        <p>
-          Great! Let's find your driving school, you need to enter a city or
-          school name...
-        </p>
+        <div className={classes.branchDiv}>
+          <p>
+            Great! Let's find your driving school, you need to enter a city or
+            school name...
+          </p>
+          {allBranches.length === 0 && <p>Found 0 schools total.</p>}
+          {allBranches.length > 0 &&
+            allBranches.map((branch) => (
+              <Branch
+                loginStatus={props.loginStatus}
+                key={branch._id}
+                id={branch._id}
+                name={branch.name}
+                city={branch.city}
+                postalCode={branch.postalCode}
+                address={branch.address}
+                phoneNumber={branch.phoneNumber}
+              />
+            ))}
+        </div>
       )}
       {isOwner && !hasCreatedSchool && (
         <div>
