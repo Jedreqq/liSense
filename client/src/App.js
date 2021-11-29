@@ -10,6 +10,12 @@ import HomePage from "./pages/Auth/HomePage";
 import { useNavigate } from 'react-router-dom'
 import School from "./pages/School/School";
 import Branches from "./pages/Branch/Branches";
+import Students from "./pages/Students/Students";
+import Instructors from "./pages/Instructors/Instructors";
+import Fleet from "./pages/Fleet/Fleet";
+import Invoices from "./pages/Invoices/Invoices";
+import Schedule from "./pages/Schedule/Schedule";
+import Courses from "./pages/Courses/Courses";
 function App() {
   const [loginStatus, setLoginStatus] = useState({
     isAuth: false,
@@ -169,7 +175,14 @@ function App() {
         />
         <Route path="/school" exact element={<School loginStatus={loginStatus} />} />
         <Route path="/branches" exact element={<Branches onActiveBranchChange={activeBranchHandler} loginStatus={loginStatus}/>}/>
+        <Route path="/students" exact element={<Students />}/>
+        <Route path="/instructors" exact element={<Instructors />}/>
+        <Route path="/fleet" exact element={<Fleet />}/>
+        <Route path="/invoices" exact element={<Invoices />}/>
+        <Route path="/schedule" exact element={<Schedule />}/>
+        <Route path="/courses" exact element={<Courses />}/>
         <Route  path="*" element={<Navigate to="/dashboard" />} />
+
       </Routes>
     );
   }

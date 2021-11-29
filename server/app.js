@@ -48,6 +48,9 @@ School.belongsTo(User);
 School.hasMany(Branch);
 Branch.belongsTo(School);
 
+Branch.hasMany(User);
+User.belongsTo(Branch); //In branch there are many users, but user is in branch, just like in school there can be many branches, but branch is in school...
+
 
 
 
