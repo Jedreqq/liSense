@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import Button from "../Button/Button";
 import classes from "./Branch.module.css";
 
 const Branch = (props) => {
@@ -17,7 +18,6 @@ const Branch = (props) => {
       },
       body: JSON.stringify({
         branchRequestId: props.id,
-        userId: props.loginStatus.userId
       }),
     })
       .then((res) => {
@@ -48,14 +48,14 @@ const Branch = (props) => {
         </header>
       </div>
       {isOwner && (
-        <button onClick={(e) => props.onActiveBranchChange(e, props.id)}>
+        <Button onClick={(e) => props.onActiveBranchChange(e, props.id)}>
           Set as Active
-        </button>
+        </Button>
       )}
       {isStudentOrInstructor && (
-        <button onClick={applyToBranchHandler}>
+        <Button onClick={applyToBranchHandler}>
           Apply to School
-        </button>
+        </Button>
       )}
     </article>
   );

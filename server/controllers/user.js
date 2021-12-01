@@ -152,7 +152,6 @@ exports.createBranch = (req, res, next) => {
         error.statusCode = 404;
         throw error;
       }
-      console.log(school);
 
       const branch = new Branch({
         name: name,
@@ -216,15 +215,18 @@ exports.applyToBranch = (req, res, next) => {
     });
 };
 
-exports.getStudentList = async (req, res, next) => {
+exports.getApplierList = async (req, res, next) => {
   let activeBranchId;
   try {
     const owner = await User.findByPk(req.userId);
     activeBranchId = owner.activeBranchId;
-    const students = await User.findAll({
+    const appliers = await User.findAll({
       where: { BranchRequestId: activeBranchId, role: "student" },
     });
-    res.status(200).json({ students: students });
+    const students = await User.findAll({
+      where: { memberId: activeBranchId, role: "student" },
+    });
+    res.status(200).json({ appliers: appliers, students: students });
   } catch (err) {
     if (!err.statusCode) {
       err.statusCode = 500;
@@ -250,8 +252,55 @@ exports.sendActiveBranch = (req, res, next) => {
       next(err);
     });
 };
-exports.getApplierList = (req, res, next) => {
+exports.getStudentList = (req, res, next) => {
   User.findAll({ where: { RequestBranchId: req } });
 };
 
-exports.replyToApplier = (req, res, next) => {};
+exports.replyToApplier = (req, res, next) => {
+  const decision = req.body.decision;
+  const studentId = req.body.id;
+
+  console.log(decision);
+
+  User.findByPk(studentId)
+    .then((user) => {
+      if (!user) {
+        const error = new Error("School not found.");
+        error.statusCode = 404;
+        throw error;
+      }
+      if (decision !== ("accept" || "reject")) {
+        const error = new Error("Invalid response.");
+        error.statusCode = 404;
+        throw error;
+      }
+      console.log(
+        "------------------------------USER----------------------" +
+          user.BranchRequestId
+      );
+      let newMember = user.BranchRequestId;
+      console.log(newMember);
+      if (decision === "accept") {
+        user.BranchRequestId = null;
+        user.memberId = newMember;
+        user.status = `member`;
+        user.save();
+        res.status(200).json({
+          message: `ACCEPT - Student with id ${studentId} added to branch ${newMember}`,
+        });
+      } else if (decision === "reject") {
+        user.status = `rejected`;
+        user.BranchRequestId = null;
+        user.save();
+        res.status(200).json({
+          message: `REJECT - Student with id ${studentId} rejected by branch ${newMember}`,
+        });
+      }
+    })
+    .catch((err) => {
+      if (!err.statusCode) {
+        err.statusCode = 500;
+      }
+      next(err);
+    });
+};

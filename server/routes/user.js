@@ -24,4 +24,5 @@ router.get('/studentList', verifyToken, isOwner, userController.getStudentList);
 router.get('/applierList', verifyToken, isOwner, userController.getApplierList);
 
 router.patch('/replyToApplier', verifyToken, isOwner, userController.replyToApplier);
+
 module.exports = router;
