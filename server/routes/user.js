@@ -16,6 +16,12 @@ router.post('/branch', verifyToken, isOwner, userController.createBranch);
 
 router.get('/branchesList', verifyToken, userController.getBranchesList);
 
-router.post('/applyToBranch', verifyToken, isStudent, userController.applyToBranch);
+router.patch('/applyToBranch', verifyToken, isStudent, userController.applyToBranch);
 
+router.patch('/sendActiveBranch', verifyToken, isOwner, userController.sendActiveBranch);
+
+router.get('/studentList', verifyToken, isOwner, userController.getStudentList);
+router.get('/applierList', verifyToken, isOwner, userController.getApplierList);
+
+router.patch('/replyToApplier', verifyToken, isOwner, userController.replyToApplier);
 module.exports = router;

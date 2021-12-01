@@ -58,9 +58,18 @@ function App() {
     e.preventDefault();
     setActiveBranch(activeBranch);
     localStorage.setItem("activeBranch", activeBranch);
+    fetch("http://localhost:3001/sendActiveBranch", {
+      method: 'PATCH',
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + loginStatus.token,
+      },
+      body: JSON.stringify({
+        activeBranchId: activeBranch
+      })
+    })
     console.log("Changed.");
   };
-  console.log(activeBranch);
 
   const signupHandler = (e, signupData) => {
     e.preventDefault();
@@ -197,7 +206,7 @@ function App() {
             />
           }
         />
-        <Route path="/students" exact element={<Students />} />
+        <Route path="/students" exact element={<Students loginStatus={loginStatus} activeBranch={activeBranch}/>} />
         <Route path="/instructors" exact element={<Instructors />} />
         <Route path="/fleet" exact element={<Fleet />} />
         <Route path="/invoices" exact element={<Invoices />} />

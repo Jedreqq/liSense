@@ -161,7 +161,6 @@ exports.createBranch = (req, res, next) => {
         address: address,
         phoneNumber: phoneNumber,
         schoolId: school._id,
-        memberId: null
       });
       const result = branch.save();
       res
@@ -184,12 +183,10 @@ exports.getBranchesList = (req, res, next) => {
         error.statusCode = 404;
         throw error;
       }
-      res
-        .status(200)
-        .json({
-          message: "Fetched branches successfully.",
-          branches: branches,
-        });
+      res.status(200).json({
+        message: "Fetched branches successfully.",
+        branches: branches,
+      });
     })
     .catch((err) => {
       if (!err.statusCode) {
@@ -200,6 +197,61 @@ exports.getBranchesList = (req, res, next) => {
 };
 
 exports.applyToBranch = (req, res, next) => {
-  console.log('witam z rest api');
+  const branchId = req.body.branchRequestId;
+  console.log(branchId);
+  User.findByPk(req.userId)
+    .then((user) => {
+      user.status = `Applies to branch #${branchId}`;
+      user.BranchRequestId = branchId;
+      const result = user.save();
+      res
+        .status(200)
+        .json({ message: `User applied to branch #${branchId}`, user: result });
+    })
+    .catch((err) => {
+      if (!err.statusCode) {
+        err.statusCode = 500;
+      }
+      next(err);
+    });
+};
 
-}
+exports.getStudentList = async (req, res, next) => {
+  let activeBranchId;
+  try {
+    const owner = await User.findByPk(req.userId);
+    activeBranchId = owner.activeBranchId;
+    const students = await User.findAll({
+      where: { BranchRequestId: activeBranchId, role: "student" },
+    });
+    res.status(200).json({ students: students });
+  } catch (err) {
+    if (!err.statusCode) {
+      err.statusCode = 500;
+    }
+    next(err);
+  }
+};
+
+exports.sendActiveBranch = (req, res, next) => {
+  const activeBranchId = req.body.activeBranchId;
+  User.findByPk(req.userId)
+    .then((user) => {
+      user.activeBranchId = activeBranchId;
+      const result = user.save();
+      res
+        .status(200)
+        .json({ message: `Branch ${activeBranchId} is now active.` });
+    })
+    .catch((err) => {
+      if (!err.statusCode) {
+        err.statusCode = 500;
+      }
+      next(err);
+    });
+};
+exports.getApplierList = (req, res, next) => {
+  User.findAll({ where: { RequestBranchId: req } });
+};
+
+exports.replyToApplier = (req, res, next) => {};

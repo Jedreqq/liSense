@@ -43,7 +43,16 @@ const User = sequelize.define("user", {
     type: DataTypes.STRING,
     allowNull: false,
   },
+  status: {
+    type: DataTypes.STRING,
+    defaultValue: "New user",
+  },
+  BranchRequestId: {
+    type: DataTypes.INTEGER,
+  },
+  activeBranchId: {
+    type: DataTypes.INTEGER,
+  }
 });
-
 
 module.exports = User;

@@ -11,6 +11,8 @@ const CreateBranch = props => {
         phoneNumber: "",
         address: "",
       });
+
+      
     const createBranchHandler = (e) => {
         e.preventDefault();
         fetch("http://localhost:3001/branch", {
@@ -39,7 +41,6 @@ const CreateBranch = props => {
           })
           .then((resData) => {
             console.log(resData);
-            console.log("TU MY BYLI");
           })
           .catch((err) => console.log(err));
       };

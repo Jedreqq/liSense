@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import classes from "./Branch.module.css";
 
 const Branch = (props) => {
@@ -6,15 +6,36 @@ const Branch = (props) => {
   let isStudentOrInstructor =
     props.loginStatus.userRole === ("student" || "instructor") ? true : false;
 
+
   const applyToBranchHandler = (e) => {
     e.preventDefault();
     fetch("http://localhost:3001/applyToBranch", {
-      method: "POST",
+      method: "PATCH",
       headers: {
+        'Content-Type': "application/json",
         Authorization: "Bearer " + props.loginStatus.token,
       },
-    });
+      body: JSON.stringify({
+        branchRequestId: props.id,
+        userId: props.loginStatus.userId
+      }),
+    })
+      .then((res) => {
+        if (res.status === 422) {
+          throw new Error("Validation failed.");
+        }
+        if (res.status !== 200 && res.status !== 201) {
+          console.log("Error!");
+          throw new Error("Creating a branch failed!");
+        }
+        return res.json();
+      })
+      .then((resData) => {
+        console.log(resData);
+      })
+      .catch((err) => console.log(err));
   };
+
 
   return (
     <article className={classes.singleBranch}>
@@ -32,7 +53,9 @@ const Branch = (props) => {
         </button>
       )}
       {isStudentOrInstructor && (
-        <button onClick={applyToBranchHandler}>Apply to School</button>
+        <button onClick={applyToBranchHandler}>
+          Apply to School
+        </button>
       )}
     </article>
   );
