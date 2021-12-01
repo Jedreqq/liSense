@@ -3,6 +3,9 @@ import classes from "./MainNav.module.css";
 
 const MainNav = (props) => {
   let isAuth = props.loginStatus.isAuth;
+  let isOwner = props.loginStatus.userRole === 'owner' ? true : false;
+  let isStudentOrInstructor = props.loginStatus.userRole === ('student' || 'instructor') ? true : false;
+
   return (
     <header className={classes.header}>
       <NavLink to="/" style={{ textDecoration: "none" }}>
@@ -23,7 +26,7 @@ const MainNav = (props) => {
             </li>
           </ul>
         )}
-        {isAuth && (
+        {isAuth && isOwner && (
           <ul>
             <li>
               <NavLink to="/branches" className={classes.active}>Branches</NavLink>              
@@ -46,6 +49,13 @@ const MainNav = (props) => {
             <li>
               <NavLink to="/courses" className={classes.active}>Courses</NavLink>
             </li>
+            <li>
+              <button onClick={props.onLogout}>Logout</button>
+            </li>
+          </ul>
+        )}
+        {isAuth && isStudentOrInstructor && (
+          <ul>
             <li>
               <button onClick={props.onLogout}>Logout</button>
             </li>

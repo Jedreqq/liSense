@@ -7,7 +7,7 @@ import LoginPage from "./pages/Auth/LoginPage";
 import SignupPage from "./pages/Auth/SignupPage";
 import Dashboard from "./pages/Dashboard/Dashboard";
 import HomePage from "./pages/Auth/HomePage";
-import { useNavigate } from 'react-router-dom'
+import { useNavigate } from "react-router-dom";
 import School from "./pages/School/School";
 import Branches from "./pages/Branch/Branches";
 import Students from "./pages/Students/Students";
@@ -37,7 +37,8 @@ function App() {
       return;
     }
     const userId = localStorage.getItem("userId");
-    const userRole = localStorage.getItem("role");
+    const userRole = localStorage.getItem("userRole");
+    const activeBranch = localStorage.getItem("activeBranch");
     // const remainingTime = new Date(expireDate).getTime() - new Date().getTime();
     setLoginStatus((loginStatus) => ({
       ...loginStatus,
@@ -45,19 +46,22 @@ function App() {
       token: token,
       userId: userId,
       userRole: userRole,
-    })); //use setState(state => ({...state,,,})) for preventing the useeffect setstate inf loop 
+    })); //use setState(state => ({...state,,,})) for preventing the useeffect setstate inf loop
+    if (userRole === "owner") {
+      setActiveBranch(activeBranch);
+    }
   }, []);
 
-
   const navigate = useNavigate();
-  
+
   const activeBranchHandler = (e, activeBranch) => {
     e.preventDefault();
     setActiveBranch(activeBranch);
-    console.log('Changed.');
-  }
+    localStorage.setItem("activeBranch", activeBranch);
+    console.log("Changed.");
+  };
   console.log(activeBranch);
-  
+
   const signupHandler = (e, signupData) => {
     e.preventDefault();
     console.log("Trying to sign up.");
@@ -92,8 +96,8 @@ function App() {
       })
       .then((resData) => {
         console.log(resData);
-        navigate('/login');
-       })
+        navigate("/login");
+      })
       .catch((err) => console.log(err));
   };
 
@@ -148,6 +152,7 @@ function App() {
     localStorage.removeItem("expireDate");
     localStorage.removeItem("userId");
     localStorage.removeItem("userRole");
+    localStorage.removeItem("activeBranch")
     setActiveBranch(null);
   };
 
@@ -159,11 +164,15 @@ function App() {
         exact
         element={<LoginPage onLogin={loginHandler} />}
       ></Route>
-      <Route path="/signup" exact element={<SignupPage onSignup={signupHandler} />}></Route>
+      <Route
+        path="/signup"
+        exact
+        element={<SignupPage onSignup={signupHandler} />}
+      ></Route>
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>
   );
-  if (loginStatus.isAuth) {
+  if (loginStatus.isAuth && loginStatus.userRole === "owner") {
     routes = (
       <Routes>
         <Route
@@ -173,20 +182,53 @@ function App() {
             <Dashboard loginStatus={loginStatus} onLogout={logoutHandler} />
           }
         />
-        <Route path="/school" exact element={<School loginStatus={loginStatus} />} />
-        <Route path="/branches" exact element={<Branches onActiveBranchChange={activeBranchHandler} loginStatus={loginStatus}/>}/>
-        <Route path="/students" exact element={<Students />}/>
-        <Route path="/instructors" exact element={<Instructors />}/>
-        <Route path="/fleet" exact element={<Fleet />}/>
-        <Route path="/invoices" exact element={<Invoices />}/>
-        <Route path="/schedule" exact element={<Schedule />}/>
-        <Route path="/courses" exact element={<Courses />}/>
-        <Route  path="*" element={<Navigate to="/dashboard" />} />
-
+        <Route
+          path="/school"
+          exact
+          element={<School loginStatus={loginStatus} />}
+        />
+        <Route
+          path="/branches"
+          exact
+          element={
+            <Branches
+              onActiveBranchChange={activeBranchHandler}
+              loginStatus={loginStatus}
+            />
+          }
+        />
+        <Route path="/students" exact element={<Students />} />
+        <Route path="/instructors" exact element={<Instructors />} />
+        <Route path="/fleet" exact element={<Fleet />} />
+        <Route path="/invoices" exact element={<Invoices />} />
+        <Route path="/schedule" exact element={<Schedule />} />
+        <Route path="/courses" exact element={<Courses />} />
+        <Route path="*" element={<Navigate to="/dashboard" />} />
       </Routes>
     );
   }
-  return <Layout onLogout={logoutHandler} loginStatus={loginStatus}>{routes}</Layout>;
+  if (
+    loginStatus.isAuth &&
+    loginStatus.userRole === ("student" || "instructor")
+  ) {
+    routes = (
+      <Routes>
+        <Route
+          path="/dashboard"
+          exact
+          element={
+            <Dashboard loginStatus={loginStatus} onLogout={logoutHandler} />
+          }
+        />
+        <Route path="*" element={<Navigate to="/dashboard" />} />
+      </Routes>
+    );
+  }
+  return (
+    <Layout onLogout={logoutHandler} loginStatus={loginStatus}>
+      {routes}
+    </Layout>
+  );
 }
 
 export default App;

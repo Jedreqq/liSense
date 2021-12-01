@@ -161,6 +161,7 @@ exports.createBranch = (req, res, next) => {
         address: address,
         phoneNumber: phoneNumber,
         schoolId: school._id,
+        memberId: null
       });
       const result = branch.save();
       res
@@ -197,3 +198,8 @@ exports.getBranchesList = (req, res, next) => {
       next(err);
     });
 };
+
+exports.applyToBranch = (req, res, next) => {
+  console.log('witam z rest api');
+
+}
