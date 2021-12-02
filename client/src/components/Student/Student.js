@@ -5,6 +5,7 @@ import classes from "./Student.module.css";
 const Student = (props) => {
   let isMember = props.isMember;
   const studentApplyHandler = (e, decision) => {
+    console.log(decision + ' ' + props.id)
     e.preventDefault();
     fetch("http://localhost:3001/replyToApplier", {
       method: "PATCH",

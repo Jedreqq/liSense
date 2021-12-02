@@ -17,6 +17,8 @@ import classes from "./Auth.module.css";
 // };
 
 const SignupPage = (props) => {
+  //const [instructorCategories, setInstructorCategories] = useState([]);
+
   const [signupData, setSignupData] = useState({
     role: "student",
     email: "",
@@ -27,24 +29,83 @@ const SignupPage = (props) => {
     postalcode: "",
     phonenumber: "",
     confirmpassword: "",
+    categories: [],
   });
 
+  const checkCategoriesHandler = (e) => {
+    let categoriesList = signupData.categories;
+    let isChecked = e.target.checked;
+    let checkedCategory = e.target.value;
+    if (isChecked) {
+      setSignupData((prevState) => ({
+        ...prevState,
+        categories: [...prevState.categories.concat(checkedCategory)],
+      }));
+      // setInstructorCategories([...instructorCategories, checkedCategory]);
+    } else {
+      var index = categoriesList.indexOf(checkedCategory);
+      if (index > -1) {
+      //  categoriesList.splice(index, 1);
+      //  console.log(categoriesList);
+        
+        setSignupData((prevState) => ({
+          ...prevState,
+          categories: [...prevState.categories.filter(element => element !== categoriesList[index])],
+        }));
+        //setInstructorCategories(categoriesList);
+      }
+    }
+  };
 
+  const categoriesOptions = [
+    "A",
+    "A1",
+    "A2",
+    "B",
+    "B1",
+    "C",
+    "C1",
+    "D",
+    "D1",
+    "B+E",
+    "C+E",
+    "D+E",
+    "T",
+  ].map((cur, index) => {
+    return (
+      <div key={index}>
+        <label>
+          <input
+            type="checkbox"
+            name={cur}
+            value={cur}
+            onChange={checkCategoriesHandler}
+          />
+          {cur}
+        </label>
+      </div>
+    );
+  });
   let isInstructor = signupData.role === "instructor";
 
   return (
     <Auth>
-      <form onSubmit={e => props.onSignup(e, {
-         role: signupData.role,
-         email: signupData.email,
-         password: signupData.password,
-         firstname: signupData.firstname,
-         lastname: signupData.lastname,
-         usercity: signupData.usercity,
-         postalcode: signupData.postalcode,
-         phonenumber: signupData.phonenumber,
-         confirmpassword: signupData.confirmpassword,
-      })}>
+      <form
+        onSubmit={(e) =>
+          props.onSignup(e, {
+            role: signupData.role,
+            email: signupData.email,
+            password: signupData.password,
+            firstname: signupData.firstname,
+            lastname: signupData.lastname,
+            usercity: signupData.usercity,
+            postalcode: signupData.postalcode,
+            phonenumber: signupData.phonenumber,
+            confirmpassword: signupData.confirmpassword,
+            categories: signupData.categories,
+          })
+        }
+      >
         <div>
           <label>YOUR ROLE </label>
           <br />
@@ -140,34 +201,7 @@ const SignupPage = (props) => {
           {isInstructor && (
             <div>
               <p>CHOOSE YOUR CATEGORIES</p>
-              <Input
-                id="cat_a_a1_a2"
-                label="A, A1, A2"
-                type="checkbox"
-                control="input"
-              />
-              <Input
-                id="cat_b_b1"
-                label="B, B1"
-                type="checkbox"
-                control="input"
-              />
-              <Input
-                id="cat_c_c1"
-                label="C, C1"
-                type="checkbox"
-                control="input"
-              />
-              <Input
-                id="cat_d_d1"
-                label="D, D1"
-                type="checkbox"
-                control="input"
-              />
-              <Input id="cat_be" label="B+E" type="checkbox" control="input" />
-              <Input id="cat_ce" label="C+E" type="checkbox" control="input" />
-              <Input id="cat_de" label="D+E" type="checkbox" control="input" />
-              <Input id="cat_t" label="T" type="checkbox" control="input" />
+              <div className={classes.categories}>{categoriesOptions}</div>
             </div>
           )}
         </div>

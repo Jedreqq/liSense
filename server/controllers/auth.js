@@ -2,6 +2,8 @@ const User = require("../models/user");
 const bcrypt = require("bcryptjs");
 const { validationResult } = require("express-validator");
 const jwt = require("jsonwebtoken");
+const Category = require("../models/category");
+const UserCategory = require("../models/user-category");
 
 exports.signup = (req, res, next) => {
   const errors = validationResult(req);
@@ -19,14 +21,17 @@ exports.signup = (req, res, next) => {
   const city = req.body.usercity;
   const postalCode = req.body.postalcode;
   const phoneNumber = req.body.phonenumber;
-  // if(role === 'instructor') {
-  //     const categories = req.body.categories;
-  // }
+  let categories;
+  if (role === "instructor") {
+    categories = req.body.categories;
+    //     const categories = req.body.categories;
+  }
+  let user;
 
   bcrypt
     .hash(password, 12)
     .then((hashedPassword) => {
-      const user = new User({
+      user = new User({
         role: role,
         email: email,
         firstname: firstname,
@@ -39,9 +44,22 @@ exports.signup = (req, res, next) => {
       return user.save();
     })
     .then((result) => {
+      if(role === 'instructor') {
+        categories.forEach((category) => {
+          Category.findAll({ where: { type: category } }).then((cats) => {
+            cats.forEach((cat) => {
+              console.log(cat);
+              const userCategory = new UserCategory({
+                userId: user._id,
+                categoryId: cat._id,
+              });
+              userCategory.save();
+            });
+          });
+        });
+      }
       res.status(201).json({
         message: `User with role ${role} created.`,
-        userId: result._id,
       });
     })
     .catch((err) => {
@@ -86,7 +104,7 @@ exports.login = (req, res, next) => {
       res.status(200).json({
         token: token,
         userId: loadedUser._id.toString(),
-        role: loadedUser.role
+        role: loadedUser.role,
       });
     })
     .catch((err) => {

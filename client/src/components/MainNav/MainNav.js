@@ -4,7 +4,8 @@ import classes from "./MainNav.module.css";
 const MainNav = (props) => {
   let isAuth = props.loginStatus.isAuth;
   let isOwner = props.loginStatus.userRole === 'owner' ? true : false;
-  let isStudentOrInstructor = props.loginStatus.userRole === ('student' || 'instructor') ? true : false;
+  let isStudentOrInstructor =
+  (props.loginStatus.userRole === "student" || props.loginStatus.userRole === "instructor") ? true : false;
 
   return (
     <header className={classes.header}>

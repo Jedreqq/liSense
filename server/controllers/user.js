@@ -1,6 +1,7 @@
 const Branch = require("../models/branch");
 const School = require("../models/school");
 const User = require("../models/user");
+const Category = require("../models/category");
 
 exports.getDashboard = (req, res, next) => {
   User.findByPk(req.userId)
@@ -252,15 +253,13 @@ exports.sendActiveBranch = (req, res, next) => {
       next(err);
     });
 };
-exports.getStudentList = (req, res, next) => {
-  User.findAll({ where: { RequestBranchId: req } });
-};
 
 exports.replyToApplier = (req, res, next) => {
   const decision = req.body.decision;
   const studentId = req.body.id;
 
   console.log(decision);
+  console.log(studentId)
 
   User.findByPk(studentId)
     .then((user) => {
@@ -269,15 +268,13 @@ exports.replyToApplier = (req, res, next) => {
         error.statusCode = 404;
         throw error;
       }
-      if (decision !== ("accept" || "reject")) {
+      if ((decision !== "accept") && (decision !== "reject")) {
         const error = new Error("Invalid response.");
         error.statusCode = 404;
         throw error;
       }
-      console.log(
-        "------------------------------USER----------------------" +
-          user.BranchRequestId
-      );
+
+      console.log(decision)
       let newMember = user.BranchRequestId;
       console.log(newMember);
       if (decision === "accept") {
@@ -289,8 +286,8 @@ exports.replyToApplier = (req, res, next) => {
           message: `ACCEPT - Student with id ${studentId} added to branch ${newMember}`,
         });
       } else if (decision === "reject") {
-        user.status = `rejected`;
         user.BranchRequestId = null;
+        user.status = 'rejected';
         user.save();
         res.status(200).json({
           message: `REJECT - Student with id ${studentId} rejected by branch ${newMember}`,
@@ -304,3 +301,39 @@ exports.replyToApplier = (req, res, next) => {
       next(err);
     });
 };
+
+
+exports.getInstructorList = async (req, res, next) => {
+  let activeBranchId;
+  try {
+    const owner = await User.findByPk(req.userId);
+    activeBranchId = owner.activeBranchId;
+    const appliers = await User.findAll({
+      where: { BranchRequestId: activeBranchId, role: "instructor" },
+    });
+    const instructors = await User.findAll({
+      where: { memberId: activeBranchId, role: "instructor" },
+    });
+    res.status(200).json({ appliers: appliers, instructors: instructors });
+  } catch (err) {
+    if (!err.statusCode) {
+      err.statusCode = 500;
+    }
+    next(err);
+  }
+};
+
+
+
+
+
+// exports.addCategory = (req, res, next) => {
+//   let categories = ["A", "A1", "A2", "B", "B1", "C", "C1", "D", "D1", "B+E", "C+E", "D+E", "T"];
+
+//   categories.forEach(category => {
+//     const categoryy = new Category({
+//       type: category
+//     });
+//     categoryy.save();
+//   })
+// }

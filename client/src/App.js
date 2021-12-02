@@ -8,7 +8,7 @@ import SignupPage from "./pages/Auth/SignupPage";
 import Dashboard from "./pages/Dashboard/Dashboard";
 import HomePage from "./pages/Auth/HomePage";
 import { useNavigate } from "react-router-dom";
-import School from "./pages/School/School";
+import School from "./components/School/School";
 import Branches from "./pages/Branch/Branches";
 import Students from "./pages/Students/Students";
 import Instructors from "./pages/Instructors/Instructors";
@@ -59,15 +59,15 @@ function App() {
     setActiveBranch(activeBranch);
     localStorage.setItem("activeBranch", activeBranch);
     fetch("http://localhost:3001/sendActiveBranch", {
-      method: 'PATCH',
+      method: "PATCH",
       headers: {
         "Content-Type": "application/json",
         Authorization: "Bearer " + loginStatus.token,
       },
       body: JSON.stringify({
-        activeBranchId: activeBranch
-      })
-    })
+        activeBranchId: activeBranch,
+      }),
+    });
     console.log("Changed.");
   };
 
@@ -89,6 +89,7 @@ function App() {
         postalcode: signupData.postalcode,
         phonenumber: signupData.phonenumber,
         confirmpassword: signupData.confirmpassword,
+        categories: signupData.categories,
       }),
     })
       .then((res) => {
@@ -104,7 +105,6 @@ function App() {
         return res.json();
       })
       .then((resData) => {
-        console.log(resData);
         navigate("/login");
       })
       .catch((err) => console.log(err));
@@ -161,7 +161,7 @@ function App() {
     localStorage.removeItem("expireDate");
     localStorage.removeItem("userId");
     localStorage.removeItem("userRole");
-    localStorage.removeItem("activeBranch")
+    localStorage.removeItem("activeBranch");
     setActiveBranch(null);
   };
 
@@ -206,8 +206,14 @@ function App() {
             />
           }
         />
-        <Route path="/students" exact element={<Students loginStatus={loginStatus} activeBranch={activeBranch}/>} />
-        <Route path="/instructors" exact element={<Instructors />} />
+        <Route
+          path="/students"
+          exact
+          element={
+            <Students loginStatus={loginStatus} activeBranch={activeBranch} />
+          }
+        />
+        <Route path="/instructors" exact element={<Instructors loginStatus={loginStatus} activeBranch={activeBranch} />} />
         <Route path="/fleet" exact element={<Fleet />} />
         <Route path="/invoices" exact element={<Invoices />} />
         <Route path="/schedule" exact element={<Schedule />} />
@@ -218,7 +224,8 @@ function App() {
   }
   if (
     loginStatus.isAuth &&
-    loginStatus.userRole === ("student" || "instructor")
+    (loginStatus.userRole === "student" ||
+      loginStatus.userRole === "instructor")
   ) {
     routes = (
       <Routes>

@@ -8,9 +8,12 @@ const app = express();
 const User = require('./models/user');
 const School = require('./models/school');
 const Branch = require('./models/branch');
+const Category = require('./models/category');
+const Vehicle = require('./models/vehicle');
 
 const authRoutes = require("./routes/auth");
 const userRoutes = require("./routes/user");
+const UserCategory = require("./models/user-category");
 
 app.use(
   cors({
@@ -50,7 +53,11 @@ Branch.belongsTo(School);
 
 User.belongsTo(Branch, {as: 'member', constraints: false, allowNull: true, defaultValue: null}); //In branch there are many users, but user is in branch, just like in school there can be many branches, but branch is in school...
 
+User.belongsToMany(Category, {through: UserCategory});
+Category.belongsToMany(User, {through: UserCategory});
 
+Branch.hasMany(Vehicle);
+Vehicle.belongsTo(Branch);
 
 
 sequelize

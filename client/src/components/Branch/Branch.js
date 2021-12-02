@@ -5,7 +5,7 @@ import classes from "./Branch.module.css";
 const Branch = (props) => {
   let isOwner = props.loginStatus.userRole === "owner" ? true : false;
   let isStudentOrInstructor =
-    props.loginStatus.userRole === ("student" || "instructor") ? true : false;
+    (props.loginStatus.userRole === "student" || props.loginStatus.userRole === "instructor") ? true : false;
 
 
   const applyToBranchHandler = (e) => {
@@ -26,7 +26,7 @@ const Branch = (props) => {
         }
         if (res.status !== 200 && res.status !== 201) {
           console.log("Error!");
-          throw new Error("Creating a branch failed!");
+          throw new Error("Apply to branch failed!");
         }
         return res.json();
       })
