@@ -14,6 +14,7 @@ const Vehicle = require('./models/vehicle');
 const authRoutes = require("./routes/auth");
 const userRoutes = require("./routes/user");
 const UserCategory = require("./models/user-category");
+const VehicleCategory = require("./models/vehicle-category");
 
 app.use(
   cors({
@@ -58,6 +59,12 @@ Category.belongsToMany(User, {through: UserCategory});
 
 Branch.hasMany(Vehicle);
 Vehicle.belongsTo(Branch);
+
+User.hasOne(Vehicle);
+Vehicle.belongsTo(User);
+
+Vehicle.belongsToMany(Category, {through: VehicleCategory});
+Category.belongsToMany(Vehicle, {through: VehicleCategory});
 
 
 sequelize

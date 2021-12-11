@@ -23,7 +23,6 @@ const Branches = (props) => {
         return res.json();
       })
       .then((resData) => {
-        console.log(resData.branches);
         setBranchesInfo((branchesInfo) => ({
           ...branchesInfo,
           branches: resData.branches.map((branch) => {

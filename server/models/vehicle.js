@@ -25,6 +25,9 @@ const Vehicle = sequelize.define('vehicle', {
       type: DataTypes.STRING,
       allowNull: false
   },
+  VehicleCategories: {
+    type: DataTypes.VIRTUAL,
+  }
 });
 
 module.exports = Vehicle;

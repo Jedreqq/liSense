@@ -2,6 +2,9 @@ const Branch = require("../models/branch");
 const School = require("../models/school");
 const User = require("../models/user");
 const Category = require("../models/category");
+const Vehicle = require("../models/vehicle");
+const VehicleCategory = require("../models/vehicle-category");
+const { compareSync } = require("bcryptjs");
 
 exports.getDashboard = (req, res, next) => {
   User.findByPk(req.userId)
@@ -22,7 +25,6 @@ exports.getDashboard = (req, res, next) => {
       if (user.role === "owner") {
         user.getSchool().then((school) => {
           if (school) {
-            console.log("test dupa jest szkola");
             hasSchool = true;
             console.log(hasSchool);
           }
@@ -259,7 +261,7 @@ exports.replyToApplier = (req, res, next) => {
   const studentId = req.body.id;
 
   console.log(decision);
-  console.log(studentId)
+  console.log(studentId);
 
   User.findByPk(studentId)
     .then((user) => {
@@ -268,13 +270,13 @@ exports.replyToApplier = (req, res, next) => {
         error.statusCode = 404;
         throw error;
       }
-      if ((decision !== "accept") && (decision !== "reject")) {
+      if (decision !== "accept" && decision !== "reject") {
         const error = new Error("Invalid response.");
         error.statusCode = 404;
         throw error;
       }
 
-      console.log(decision)
+      console.log(decision);
       let newMember = user.BranchRequestId;
       console.log(newMember);
       if (decision === "accept") {
@@ -287,7 +289,7 @@ exports.replyToApplier = (req, res, next) => {
         });
       } else if (decision === "reject") {
         user.BranchRequestId = null;
-        user.status = 'rejected';
+        user.status = "rejected";
         user.save();
         res.status(200).json({
           message: `REJECT - Student with id ${studentId} rejected by branch ${newMember}`,
@@ -302,7 +304,6 @@ exports.replyToApplier = (req, res, next) => {
     });
 };
 
-
 exports.getInstructorList = async (req, res, next) => {
   let activeBranchId;
   try {
@@ -310,9 +311,10 @@ exports.getInstructorList = async (req, res, next) => {
     activeBranchId = owner.activeBranchId;
     const appliers = await User.findAll({
       where: { BranchRequestId: activeBranchId, role: "instructor" },
+      include: Category
     });
     const instructors = await User.findAll({
-      where: { memberId: activeBranchId, role: "instructor" },
+      where: { memberId: activeBranchId, role: "instructor"}, include: Category
     });
     res.status(200).json({ appliers: appliers, instructors: instructors });
   } catch (err) {
@@ -323,9 +325,68 @@ exports.getInstructorList = async (req, res, next) => {
   }
 };
 
+exports.createVehicle = async (req, res, next) => {
+  const brand = req.body.brand;
+  const model = req.body.model;
+  const year = req.body.year;
+  const registrationPlate = req.body.registrationPlate;
+  const categories = req.body.categories;
+  let activeBranchId;
+  let vehicle;
+  try {
+    const owner = await User.findByPk(req.userId);
+    activeBranchId = owner.activeBranchId;
+    vehicle = new Vehicle({
+      brand: brand,
+      model: model,
+      year: year,
+      registrationPlate: registrationPlate,
+      branchId: activeBranchId,
+    });
+    const result = await vehicle.save();
+    categories.forEach((category) => {
+      Category.findAll({ where: { type: category } }).then((cats) => {
+        cats.forEach((cat) => {
+          console.log(cat);
+          const vehicleCategory = new VehicleCategory({
+            vehicleId: vehicle._id,
+            categoryId: cat._id,
+          });
+          const savedConnection = vehicleCategory.save();
+        });
+      });
+    });
+    res.status(201).json({
+      message: "Vehicle saved successfully.",
+      vehicle: result,
+    });
+  } catch (err) {
+    if (!err.statusCode) {
+      err.statusCode = 500;
+    }
+    next(err);
+  }
+  // has to find current branch, like in instructor list, to save() this branchId in DB. userID can be null, I have to admit it in model!
+};
 
 
-
+exports.getVehicleList = async (req, res, next) => {
+  let activeBranchId;
+  try {
+    const owner = await User.findByPk(req.userId);
+    activeBranchId = owner.activeBranchId;
+    const vehicles = await Vehicle.findAll({
+      where: { branchId: activeBranchId },
+      include: Category,
+    });
+    res.status(200).json({ vehicles: vehicles });
+  } catch (err) {
+    if (!err.statusCode) {
+      err.statusCode = 500;
+    }
+    next(err);
+  }
+};
 
 // exports.addCategory = (req, res, next) => {
 //   let categories = ["A", "A1", "A2", "B", "B1", "C", "C1", "D", "D1", "B+E", "C+E", "D+E", "T"];

@@ -20,10 +20,14 @@ router.patch('/applyToBranch', verifyToken, isStudentOrInstructor,userController
 
 router.patch('/sendActiveBranch', verifyToken, isOwner, userController.sendActiveBranch);
 
-router.get('/instructorList', verifyToken, isOwner, userController.getInstructorList);
+router.get('/instructorList', verifyToken, userController.getInstructorList);
 router.get('/applierList', verifyToken, isOwner, userController.getApplierList);
 
 router.patch('/replyToApplier', verifyToken, isOwner, userController.replyToApplier);
+
+router.post('/createVehicle', verifyToken, isOwner, userController.createVehicle);
+
+router.get('/fleet', verifyToken, userController.getVehicleList);
 
 // router.post('/addCategory', userController.addCategory);
 

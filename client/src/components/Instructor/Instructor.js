@@ -40,6 +40,13 @@ const Instructor = props => {
           <header>
             <h2>{` ${props.firstname} ${props.lastname}`}</h2>
             <p>{`${props.phoneNumber}, ${props.email}`}</p>
+            <div>
+             
+             {props.categories.map(category => {
+               return <p className={classes.category}>{category.type} </p>
+             })}
+     
+         </div>
             {!isMember && (
               <React.Fragment>
                 <Button onClick={(e) => instructorApplyHandler(e, "accept")}>

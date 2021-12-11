@@ -105,6 +105,7 @@ exports.login = (req, res, next) => {
         token: token,
         userId: loadedUser._id.toString(),
         role: loadedUser.role,
+        memberId: loadedUser.memberId
       });
     })
     .catch((err) => {

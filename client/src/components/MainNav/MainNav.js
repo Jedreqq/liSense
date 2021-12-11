@@ -6,6 +6,8 @@ const MainNav = (props) => {
   let isOwner = props.loginStatus.userRole === 'owner' ? true : false;
   let isStudentOrInstructor =
   (props.loginStatus.userRole === "student" || props.loginStatus.userRole === "instructor") ? true : false;
+  let isStudent = (props.loginStatus.userRole === "student");
+  let isMember = props.isMember;
 
   return (
     <header className={classes.header}>
@@ -52,6 +54,13 @@ const MainNav = (props) => {
             </li>
             <li>
               <button onClick={props.onLogout}>Logout</button>
+            </li>
+          </ul>
+        )}
+        {isAuth && isStudent && isMember && (
+          <ul>
+            <li>
+              <NavLink to="/instructors" className={classes.active}>Instructors</NavLink>
             </li>
           </ul>
         )}
