@@ -84,7 +84,7 @@ const CreateVehicle = (props) => {
         }
         if (res.status !== 200 && res.status !== 201) {
           console.log("Error!");
-          throw new Error("Creating a branch failed!");
+          throw new Error("Creating a vehicle failed!");
         }
         return res.json();
       })

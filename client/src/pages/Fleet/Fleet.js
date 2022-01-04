@@ -17,7 +17,7 @@ const Fleet = (props) => {
           }
       }).then(res => {
         if (res.status !== 200) {
-            throw new Error("Failed to fetch instructors.");
+            throw new Error("Failed to fetch vehicles.");
           }
           return res.json();
       }).then(resData => {

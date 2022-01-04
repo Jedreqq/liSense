@@ -45,9 +45,9 @@ const Students = (props) => {
         {students.length > 0 &&
           students.map((student) => (
             <Student
-            loginStatus={props.loginStatus}
-            key={student._id}
-            id={student._id}
+              loginStatus={props.loginStatus}
+              key={student._id}
+              id={student._id}
               firstname={student.firstname}
               lastname={student.lastname}
               email={student.email}

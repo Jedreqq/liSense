@@ -18,12 +18,12 @@ const MainNav = (props) => {
         {!isAuth && (
           <ul>
             <li>
-              <NavLink to="/login" className={classes.active}>
+              <NavLink to="/login" className={(navData) => navData.isActive ? classes.active : ''}>
                 Login
               </NavLink>
             </li>
             <li>
-              <NavLink to="/signup" className={classes.active}>
+              <NavLink to="/signup" className={(navData) => navData.isActive ? classes.active : ''}>
                 Signup
               </NavLink>
             </li>
@@ -32,25 +32,25 @@ const MainNav = (props) => {
         {isAuth && isOwner && (
           <ul>
             <li>
-              <NavLink to="/branches" className={classes.active}>Branches</NavLink>              
+              <NavLink to="/branches" className={(navData) => navData.isActive ? classes.active : ''}>Branches</NavLink>              
             </li>
             <li>
-              <NavLink to="/students" className={classes.active}>Students</NavLink>
+              <NavLink to="/students" className={(navData) => navData.isActive ? classes.active : ''}>Students</NavLink>
             </li>
             <li>
-              <NavLink to="/instructors" className={classes.active}>Instructors</NavLink>
+              <NavLink to="/instructors" className={(navData) => navData.isActive ? classes.active : ''}>Instructors</NavLink>
             </li>
             <li>
-              <NavLink to="/fleet" className={classes.active}>Fleet</NavLink>
+              <NavLink to="/fleet" className={(navData) => navData.isActive ? classes.active : ''}>Fleet</NavLink>
             </li>
             <li>
-              <NavLink to="/invoices" className={classes.active}>Invoices</NavLink>
+              <NavLink to="/invoices" className={(navData) => navData.isActive ? classes.active : ''}>Invoices</NavLink>
             </li>
             <li>
-              <NavLink to="/schedule" className={classes.active}>Schedule</NavLink>
+              <NavLink to="/schedule" className={(navData) => navData.isActive ? classes.active : ''}>Schedule</NavLink>
             </li>
             <li>
-              <NavLink to="/courses" className={classes.active}>Courses</NavLink>
+              <NavLink to="/courses" className={(navData) => navData.isActive ? classes.active : ''}>Courses</NavLink>
             </li>
             <li>
               <button onClick={props.onLogout}>Logout</button>
@@ -60,7 +60,7 @@ const MainNav = (props) => {
         {isAuth && isStudent && isMember && (
           <ul>
             <li>
-              <NavLink to="/instructors" className={classes.active}>Instructors</NavLink>
+              <NavLink to="/courses" className={(navData) => navData.isActive ? classes.active : ''}>Courses</NavLink>
             </li>
           </ul>
         )}

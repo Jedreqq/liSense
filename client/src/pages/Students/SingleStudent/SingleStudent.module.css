@@ -1,0 +1,8 @@
+.studentDiv {
+    width: 100%;
+    margin: auto;
+    padding: 1rem;
+    border: 1px solid #3b0062;
+    border-radius: 5px;
+    background-color: rgba(207, 237, 252, 0.062);
+}

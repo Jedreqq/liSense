@@ -105,7 +105,9 @@ exports.login = (req, res, next) => {
         token: token,
         userId: loadedUser._id.toString(),
         role: loadedUser.role,
-        memberId: loadedUser.memberId
+        memberId: loadedUser.memberId,
+        email: loadedUser.email,
+        isAuth: true
       });
     })
     .catch((err) => {

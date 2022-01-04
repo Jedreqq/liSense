@@ -9,6 +9,7 @@ const Dashboard = (props) => {
   const [role, setRole] = useState("");
   const [schoolName, setSchoolName] = useState("");
   const [hasCreatedSchool, setHasCreatedSchool] = useState(false); //if school created by owner he gets redirected to his school
+  const [isMember, setIsMember] = useState(false);
   const [allBranches, setAllBranches] = useState([]);
   const navigate = useNavigate();
   useEffect(() => {
@@ -24,10 +25,17 @@ const Dashboard = (props) => {
         return res.json();
       })
       .then((resData) => {
+        console.log(resData.branch);
         setRole(resData.role);
         setHasCreatedSchool(resData.hasSchool);
         if (role === "owner" && hasCreatedSchool) {
           navigate("/school");
+        }
+        if ((role === "student" || role === "instructor")) {
+          setIsMember(!!resData.memberId);
+        }
+        if (role === "student" && isMember) {
+          navigate("/studentDash")
         }
       });
 
@@ -52,7 +60,7 @@ const Dashboard = (props) => {
         );
       })
       .catch((err) => console.log(err));
-  }, [props.loginStatus.token, hasCreatedSchool, navigate, role]);
+  }, [props.loginStatus.token, hasCreatedSchool, navigate, role, isMember]);
 
   const createSchoolHandler = (e) => {
     e.preventDefault();
@@ -82,10 +90,12 @@ const Dashboard = (props) => {
   let isInstructor = role === "instructor";
   let isOwner = role === "owner";
 
+  console.log(isMember);
+
   return (
     <div>
       <p>Hello there, authenticated man, are you a {role}? </p>
-      {(isStudent || isInstructor) && (
+      {(isStudent || isInstructor) && !isMember && (
         <div className={classes.branchDiv}>
           <p>
             Great! Let's find your driving school, you need to enter a city or

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import "./App.css";
 //import Button from "./components/Button/Button";
@@ -16,18 +16,43 @@ import Fleet from "./pages/Fleet/Fleet";
 import Invoices from "./pages/Invoices/Invoices";
 import Schedule from "./pages/Schedule/Schedule";
 import Courses from "./pages/Courses/Courses";
+import SingleCourse from "./pages/Courses/SingleCourse/SingleCourse";
+import StudentDash from "./pages/Dashboard/StudentDash/StudentDash";
+import Payment from "./pages/Payment/Payment";
+import SingleVehicle from "./pages/Fleet/SingleVehicle/SingleVehicle";
+import SingleInstructor from "./pages/Instructors/SingleInstructor/SingleInstructor";
+import SingleStudent from "./pages/Students/SingleStudent/SingleStudent";
+
 function App() {
   const [loginStatus, setLoginStatus] = useState({
     isAuth: false,
     token: null,
     userId: null,
     userRole: null,
+    userMail: null,
   });
 
   const [activeBranch, setActiveBranch] = useState(null);
   const [memberId, setMemberId] = useState(null);
 
-  useEffect(() => {
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  const navigate = useNavigate();
+
+  const logoutHandler = useCallback(() => {
+    setLoginStatus({ isAuth: false, token: null });
+    localStorage.removeItem("token");
+    localStorage.removeItem("expireDate");
+    localStorage.removeItem("userId");
+    localStorage.removeItem("userRole");
+    localStorage.removeItem("activeBranch");
+    localStorage.removeItem("memberId");
+    localStorage.removeItem("userMail");
+    setActiveBranch(null);
+    setMemberId(null);
+  }, [setLoginStatus, setActiveBranch, setMemberId]);
+
+  const checkLoginStatus = useCallback(async () => {
     const token = localStorage.getItem("token");
     const expireDate = localStorage.getItem("expireDate");
     if (!token || !expireDate) {
@@ -38,6 +63,7 @@ function App() {
       return;
     }
     const userId = localStorage.getItem("userId");
+    const userMail = localStorage.getItem("userMail");
     const userRole = localStorage.getItem("userRole");
     const activeBranch = localStorage.getItem("activeBranch");
     const memberId = localStorage.getItem("memberId");
@@ -48,14 +74,18 @@ function App() {
       token: token,
       userId: userId,
       userRole: userRole,
+      userMail: userMail,
     })); //use setState(state => ({...state,,,})) for preventing the useeffect setstate inf loop
     if (userRole === "owner") {
       setActiveBranch(activeBranch);
     }
     setMemberId(memberId);
-  }, [loginStatus.isAuth]);
+  }, [logoutHandler, setLoginStatus, setActiveBranch]);
 
-  const navigate = useNavigate();
+  useEffect(
+    () => checkLoginStatus().finally((x) => setIsLoaded(true)),
+    [loginStatus.isAuth, checkLoginStatus, setIsLoaded]
+  );
 
   console.log(memberId);
 
@@ -146,6 +176,7 @@ function App() {
           token: resData.token,
           userId: resData.userId,
           userRole: resData.role,
+          userMail: resData.email,
         });
         setMemberId(resData.memberId);
 
@@ -153,6 +184,7 @@ function App() {
         localStorage.setItem("userId", resData.userId);
         localStorage.setItem("userRole", resData.role);
         localStorage.setItem("memberId", resData.memberId);
+        localStorage.setItem("userMail", resData.email);
         const remainingTime = 60 * 60 * 1000;
         const expireDate = new Date(new Date().getTime() + remainingTime);
         localStorage.setItem("expireDate", expireDate.toISOString());
@@ -163,52 +195,36 @@ function App() {
       });
   };
 
-  const logoutHandler = () => {
-    setLoginStatus({ isAuth: false, token: null });
-    localStorage.removeItem("token");
-    localStorage.removeItem("expireDate");
-    localStorage.removeItem("userId");
-    localStorage.removeItem("userRole");
-    localStorage.removeItem("activeBranch");
-    localStorage.removeItem("memberId");
-    setActiveBranch(null);
-    setMemberId(null);
-  };
-
-  let routes = (
-    <Routes>
-      <Route path="/" exact element={<HomePage />}></Route>
-      <Route
-        path="/login"
-        exact
-        element={<LoginPage onLogin={loginHandler} />}
-      ></Route>
-      <Route
-        path="/signup"
-        exact
-        element={<SignupPage onSignup={signupHandler} />}
-      ></Route>
-      <Route path="*" element={<Navigate to="/" />} />
-    </Routes>
-  );
+  let routes;
+  if (!loginStatus.isAuth) {
+    routes = (
+      <Routes>
+        <Route path="/" element={<HomePage />}></Route>
+        <Route
+          path="/login"
+          element={<LoginPage onLogin={loginHandler} />}
+        ></Route>
+        <Route
+          path="/signup"
+          element={<SignupPage onSignup={signupHandler} />}
+        ></Route>
+        <Route path="*" element={<Navigate replace to="/" />} />
+      </Routes>
+    );
+  }
   if (loginStatus.isAuth && loginStatus.userRole === "owner") {
     routes = (
       <Routes>
+        <Route path="/school" element={<School loginStatus={loginStatus} />} />
         <Route
           path="/dashboard"
-          exact
           element={
             <Dashboard loginStatus={loginStatus} onLogout={logoutHandler} />
           }
         />
-        <Route
-          path="/school"
-          exact
-          element={<School loginStatus={loginStatus} />}
-        />
+
         <Route
           path="/branches"
-          exact
           element={
             <Branches
               onActiveBranchChange={activeBranchHandler}
@@ -218,14 +234,18 @@ function App() {
         />
         <Route
           path="/students"
-          exact
           element={
             <Students loginStatus={loginStatus} activeBranch={activeBranch} />
           }
         />
         <Route
+          path="/students/:studentId"
+          element={
+            <SingleStudent loginStatus={loginStatus} activeBranch={activeBranch} />
+          }
+        />
+        <Route
           path="/instructors"
-          exact
           element={
             <Instructors
               loginStatus={loginStatus}
@@ -234,39 +254,63 @@ function App() {
           }
         />
         <Route
+          path="/instructors/:instructorId"
+          element={
+            <SingleInstructor
+              loginStatus={loginStatus}
+              activeBranch={activeBranch}
+            />
+          }
+        />
+        <Route
           path="/fleet"
-          exact
           element={
             <Fleet loginStatus={loginStatus} activeBranch={activeBranch} />
           }
         />
         <Route
+          path="/fleet/:vehicleId"
+          element={
+            <SingleVehicle
+              loginStatus={loginStatus}
+              activeBranch={activeBranch}
+            />
+          }
+        />
+        <Route
           path="/invoices"
-          exact
           element={
             <Invoices loginStatus={loginStatus} activeBranch={activeBranch} />
           }
         />
         <Route
           path="/schedule"
-          exact
           element={
             <Schedule loginStatus={loginStatus} activeBranch={activeBranch} />
           }
         />
         <Route
           path="/courses"
-          exact
           element={
             <Courses loginStatus={loginStatus} activeBranch={activeBranch} />
           }
         />
-        <Route path="*" element={<Navigate to="/dashboard" />} />
+        <Route
+          path="/courses/:courseId"
+          element={
+            <SingleCourse
+              loginStatus={loginStatus}
+              activeBranch={activeBranch}
+            />
+          }
+        />
+        <Route path="*" element={<Navigate replace to="/dashboard" />} />
       </Routes>
     );
   }
   if (
     loginStatus.isAuth &&
+    memberId === null &&
     (loginStatus.userRole === "student" ||
       loginStatus.userRole === "instructor")
   ) {
@@ -279,10 +323,11 @@ function App() {
             <Dashboard loginStatus={loginStatus} onLogout={logoutHandler} />
           }
         />
-        <Route path="*" element={<Navigate to="/dashboard" />} />
+        <Route path="*" element={<Navigate replace to="/dashboard" />} />
       </Routes>
     );
   }
+
   if (
     loginStatus.isAuth &&
     loginStatus.userRole === "student" &&
@@ -291,28 +336,33 @@ function App() {
     routes = (
       <Routes>
         <Route
-          path="/dashboard"
+          path="/payment"
           exact
-          element={
-            <Dashboard loginStatus={loginStatus} onLogout={logoutHandler} />
-          }
+          element={<Payment loginStatus={loginStatus} />}
         />
         <Route
-          path="/instructors"
+          path="/courses"
           exact
           element={
-            <Instructors
+            <Courses
               loginStatus={loginStatus}
               activeBranch={activeBranch}
               memberId={memberId}
             />
           }
         />
-        <Route path="*" element={<Navigate to="/dashboard" />} />
+        <Route
+          path="/studentDash"
+          exact
+          element={
+            <StudentDash loginStatus={loginStatus} onLogout={logoutHandler} />
+          }
+        />
+        <Route path="*" element={<Navigate replace to="/studentDash" />} />
       </Routes>
     );
   }
-  return (
+  return isLoaded ? (
     <Layout
       onLogout={logoutHandler}
       loginStatus={loginStatus}
@@ -320,6 +370,8 @@ function App() {
     >
       {routes}
     </Layout>
+  ) : (
+    <></>
   );
 }
 

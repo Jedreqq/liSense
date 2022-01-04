@@ -28,13 +28,13 @@
   
   .nav a {
     text-decoration: none;
-    color: #88dfdf;
+    color: #ffffff;
   }
   
   .nav a:hover,
   .nav a:active,
   .nav a.active {
-    color: #e6fcfc;
+    color: #b2ecec;
   }
 
   .schoolNameNav {
