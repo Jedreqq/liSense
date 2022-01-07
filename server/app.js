@@ -80,16 +80,11 @@ User.hasMany(Payment);
 Payment.belongsTo(User);
 
 User.belongsTo(Course, {as: 'attendedCourse', constraints: false, allowNull: true, defaultValue: null});
+
+User.belongsTo(User, {as: 'assignedInstructor', constraints: false, allowNull: true, defaultValue: null});
 // Course.hasMany(User);
 // User.belongsTo(Course); //instruktor moze byc przypisany do wielu kursow wiec tu bedzie N:M
 
-
-
-
-
-
-//does course hasMany user and user belongs to many (or one, but what for instructor?) courses
-//payments? or maybe just invoice as data like in a nodecourse done... needs to be some sort of orderitem i think, i have to analize it quite deeply
 
 sequelize
   .sync()

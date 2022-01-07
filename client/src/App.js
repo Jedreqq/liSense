@@ -13,7 +13,7 @@ import Branches from "./pages/Branch/Branches";
 import Students from "./pages/Students/Students";
 import Instructors from "./pages/Instructors/Instructors";
 import Fleet from "./pages/Fleet/Fleet";
-import Invoices from "./pages/Invoices/Invoices";
+import Payments from "./pages/Payments/Payments";
 import Schedule from "./pages/Schedule/Schedule";
 import Courses from "./pages/Courses/Courses";
 import SingleCourse from "./pages/Courses/SingleCourse/SingleCourse";
@@ -22,6 +22,7 @@ import Payment from "./pages/Payment/Payment";
 import SingleVehicle from "./pages/Fleet/SingleVehicle/SingleVehicle";
 import SingleInstructor from "./pages/Instructors/SingleInstructor/SingleInstructor";
 import SingleStudent from "./pages/Students/SingleStudent/SingleStudent";
+import InstructorDash from "./pages/Dashboard/InstructorDash/InstructorDash";
 
 function App() {
   const [loginStatus, setLoginStatus] = useState({
@@ -241,7 +242,10 @@ function App() {
         <Route
           path="/students/:studentId"
           element={
-            <SingleStudent loginStatus={loginStatus} activeBranch={activeBranch} />
+            <SingleStudent
+              loginStatus={loginStatus}
+              activeBranch={activeBranch}
+            />
           }
         />
         <Route
@@ -278,9 +282,9 @@ function App() {
           }
         />
         <Route
-          path="/invoices"
+          path="/payments"
           element={
-            <Invoices loginStatus={loginStatus} activeBranch={activeBranch} />
+            <Payments loginStatus={loginStatus} activeBranch={activeBranch} />
           }
         />
         <Route
@@ -327,6 +331,41 @@ function App() {
       </Routes>
     );
   }
+  if (
+    loginStatus.isAuth &&
+    loginStatus.userRole === "instructor" &&
+    memberId !== null
+  ) {
+    routes = (
+      <Routes>
+        <Route
+          path="/instructorDash"
+          exact
+          element={
+            <InstructorDash
+              loginStatus={loginStatus}
+              onLogout={logoutHandler}
+            />
+          }
+        />
+        <Route
+          path="/students"
+          exact
+          element={
+            <Students loginStatus={loginStatus} onLogout={logoutHandler} />
+          }
+        />
+        <Route
+          path="/schedule"
+          exact
+          element={
+            <Schedule loginStatus={loginStatus} onLogout={logoutHandler} />
+          }
+        />
+        <Route path="*" element={<Navigate replace to="/instructorDash" />} />
+      </Routes>
+    );
+  }
 
   if (
     loginStatus.isAuth &&
@@ -339,6 +378,17 @@ function App() {
           path="/payment"
           exact
           element={<Payment loginStatus={loginStatus} />}
+        />
+        <Route
+          path="/instructors"
+          exact
+          element={
+            <Instructors
+              loginStatus={loginStatus}
+              activeBranch={activeBranch}
+              memberId={memberId}
+            />
+          }
         />
         <Route
           path="/courses"

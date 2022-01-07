@@ -7,35 +7,70 @@ const Students = (props) => {
   const [students, setStudents] = useState([]);
 
   useEffect(() => {
-    fetch("http://localhost:3001/applierList", {
-      headers: {
-        Authorization: "Bearer " + props.loginStatus.token,
-      },
-    })
-      .then((res) => {
-        if (res.status !== 200) {
-          throw new Error("Failed to fetch students list.");
-        }
-        return res.json();
+    if (props.loginStatus.userRole === "owner") {
+      fetch("http://localhost:3001/applierList", {
+        headers: {
+          Authorization: "Bearer " + props.loginStatus.token,
+        },
       })
-      .then((resData) => {
-        setAppliers(
-          resData.appliers.map((applier) => {
-            return {
-              ...applier,
-            };
-          })
-        );
-        setStudents(
-          resData.students.map((student) => {
-            return {
-              ...student,
-            };
-          })
-        );
+        .then((res) => {
+          if (res.status !== 200) {
+            throw new Error("Failed to fetch students list.");
+          }
+          return res.json();
+        })
+        .then((resData) => {
+          setAppliers(
+            resData.appliers.map((applier) => {
+              return {
+                ...applier,
+              };
+            })
+          );
+          setStudents(
+            resData.students.map((student) => {
+              return {
+                ...student,
+              };
+            })
+          );
+        })
+        .catch((err) => console.log(err));
+    }
+    if (props.loginStatus.userRole === "instructor") {
+      console.log("hello");
+      fetch("http://localhost:3001/studentListOfInstructor", {
+        headers: {
+          Authorization: "Bearer " + props.loginStatus.token,
+        },
       })
-      .catch((err) => console.log(err));
-  }, [props.loginStatus.token]);
+        .then((res) => {
+          if (res.status !== 200) {
+            throw new Error("Failed to fetch students list.");
+          }
+          return res.json();
+        })
+        .then((resData) => {
+          setAppliers(
+            resData.appliers.map((applier) => {
+              return {
+                ...applier,
+              };
+            })
+          );
+          setStudents(
+            resData.students.map((student) => {
+              return {
+                ...student,
+              };
+            })
+          );
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+    }
+  }, [props.loginStatus.token, props.loginStatus.userRole]);
 
   return (
     <div>

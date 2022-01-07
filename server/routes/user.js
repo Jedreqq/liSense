@@ -44,6 +44,8 @@ router.get("/applierList", verifyToken, isOwner, userController.getApplierList);
 
 router.get("/applierList/:studentId", verifyToken, userController.getSingleApplier);
 
+router.patch("/assignInstructorToStudent", verifyToken, isOwner, userController.assignInstructorToStudent);
+
 router.patch(
   "/replyToApplier",
   verifyToken,
@@ -61,6 +63,8 @@ router.post(
 router.get("/fleet", verifyToken, userController.getVehicleList);
 
 router.get("/fleet/:vehicleId", verifyToken, isOwner, userController.getSingleVehicle);
+
+router.patch("/assignInstructorToVehicle", verifyToken, isOwner, userController.assignInstructorToVehicle);
 
 router.post("/createCourse", verifyToken, isOwner, userController.createCourse);
 
@@ -82,6 +86,19 @@ router.post('/retrieveStripeObj', verifyToken, isStudent, userController.retriev
 
 router.patch('/changePaymentStatus', verifyToken, isOwner, userController.changePaymentStatus)
 //
+
+router.get('/branchPaymentsList', verifyToken, isOwner, userController.getBranchPaymentsList);
+
+router.get('/instructorListForStudent', verifyToken, isStudent, userController.getInstructorListForStudent);
+
+router.patch('/sendRequestToInstructor', verifyToken, isStudent, userController.sendRequestToInstructor);
+
+router.get('/studentListOfInstructor', verifyToken, isInstructor, userController.studentListOfInstructor);
+
+router.patch('/replyToApplierInstructorRequest', verifyToken, isInstructor, userController.replyToApplierInstructorRequest);
+
+
+
 router.post('/addCategory', userController.addCategory);
 
 

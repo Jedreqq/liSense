@@ -45,20 +45,6 @@ const SingleInstructor = (props) => {
             };
           }),
         }));
-        // setVehicleData((vehicleInfo) => ({
-        //   ...vehicleInfo,
-        //   brand: resData.vehicle.brand,
-        //   model: resData.vehicle.model,
-        //   year: resData.vehicle.year,
-        //   registrationPlate: resData.vehicle.registrationPlate,
-        //   branchId: resData.vehicle.branchId,
-        //   assignedInstructor: resData.vehicle.userId,
-        //   categories: resData.vehicle.categories.map((category) => {
-        //     return {
-        //       ...category,
-        //     };
-        //   }),
-        // }));
       })
       .catch((err) => {
         console.log(err);
@@ -80,9 +66,17 @@ const SingleInstructor = (props) => {
         <h5>
           Categories:
           {instructorData.categories.length === 0 ? (
-            <p>Instructor has zero categories.</p>
+            <div>
+              <p>Instructor has zero categories.</p>
+            </div>
           ) : (
-            instructorData.categories.map((category) => <p key={category._id} className={classes.category}>{category.type} </p>)
+            <div>
+              {instructorData.categories.map((category) => (
+                <p key={category._id} className={classes.category}>
+                  {category.type}{" "}
+                </p>
+              ))}
+            </div>
           )}
         </h5>
       </div>

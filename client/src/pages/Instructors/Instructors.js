@@ -10,7 +10,27 @@ const Instructors = (props) => {
 
   useEffect(() => {
     if(isMember) {
-      console.log('tutaj bedzie pobranie instuktorow o tym id ktore ma student')
+      fetch("http://localhost:3001/instructorListForStudent", {
+        headers: {
+          Authorization: "Bearer " + props.loginStatus.token
+        }
+      }).then(res => {
+        if (res.status !== 200) {
+          throw new Error("Failed to fetch instructors list.");
+        }
+        return res.json();
+      }).then(resData => {
+        console.log(resData);
+        setInstructors(
+          resData.instructors.map((instructor) => {
+            return {
+              ...instructor,
+            };
+          })
+        );
+      }).catch(err => {
+        console.log(err);
+      })
     }
     if(!isMember) {
       fetch("http://localhost:3001/instructorList", {
@@ -49,11 +69,12 @@ const Instructors = (props) => {
     <div>
       {isMember && (
         <div className={classes.instructorsDiv}>
-          <h2>Instrctors List</h2>
+          <h2>Instructors List</h2>
           {instructors.length === 0 && <p>No instructors in branch.</p>}
           {instructors.length > 0 &&
             instructors.map((instructor) => (
               <Instructor
+                curVehicle={instructor.vehicle}
                 loginStatus={props.loginStatus}
                 key={instructor._id}
                 id={instructor._id}

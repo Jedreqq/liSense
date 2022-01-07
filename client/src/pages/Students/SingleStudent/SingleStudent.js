@@ -14,7 +14,11 @@ const SingleStudent = (props) => {
     phoneNumber: "",
     memberId: "",
     city: "",
+    attendedCourse: "",
+    assignedInstructor: ""
   });
+
+  const [availableInstructors, setAvailableInstructors] = useState([]);
 
   useEffect(() => {
     fetch("http://localhost:3001/applierList/" + studentId, {
@@ -37,12 +41,41 @@ const SingleStudent = (props) => {
           phoneNumber: resData.student.phoneNumber,
           memberId: resData.student.memberId,
           city: resData.student.city,
+          attendedCourse: resData.attendedCourse.name,
         }));
+        setAvailableInstructors(resData.instructors.map(instructor => {
+          return {
+            ...instructor
+          }
+        }))
       })
       .catch((err) => {
         console.log(err);
       });
   }, [props.loginStatus.token, studentId]);
+
+  const setAssignedInstructorHandler = e => {
+    setStudentData({...studentData, assignedInstructor: e.target.value});
+
+    fetch('http://localhost:3001/assignInstructorToStudent', {
+      method: 'PATCH',
+      headers: {
+        Authorization: "Bearer " + props.loginStatus.token,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        assignedInstructor: e.target.value,
+        curStudent: studentId
+      })
+    }).then(res => {
+      if (res.status !== 200) {
+        throw new Error("Failed to assign instructor.");
+      }
+      return res.json();
+    }).then(resData => {
+      console.log(resData);
+    })
+  }
 
   console.log(studentData);
 
@@ -53,9 +86,25 @@ const SingleStudent = (props) => {
           {studentData.firstname} {studentData.lastname}
         </h3>
         <h4>
-          {studentData.email} {studentData.phoneNumber}{" "}
-          {studentData.city}
+          {studentData.email} {studentData.phoneNumber} {studentData.city}
         </h4>
+        <p>
+          Attended Course: 
+          {studentData.attendedCourse}
+        </p>
+        <p>
+          Assigned Instructor in Course: 
+          <br/>
+          <select value={studentData.assignedInstructor} name="instructor" id="instructor" label="Assign Instructor" onChange={setAssignedInstructorHandler}>
+          {availableInstructors.map(instructor => {
+            return (
+              <option key={instructor._id} value={instructor._id}>
+                {instructor.firstname + ' ' + instructor.lastname} 
+              </option>
+            ) 
+          })}
+        </select>
+        </p>
       </div>
     </section>
   );

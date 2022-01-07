@@ -17,6 +17,8 @@ const SingleVehicle = (props) => {
     categories: [],
   });
 
+  const [availableInstructors, setAvailableInstructors] = useState([]);
+
   useEffect(() => {
     fetch("http://localhost:3001/fleet/" + vehicleId, {
       headers: {
@@ -44,11 +46,39 @@ const SingleVehicle = (props) => {
             };
           }),
         }));
+        setAvailableInstructors(resData.instructors.map(instructor => {
+            return {
+                ...instructor
+            }
+        }))
       })
       .catch((err) => {
         console.log(err);
       });
   }, [props.loginStatus.token, vehicleId]);
+
+    const setActiveInstructorHandler = e => {
+      setVehicleData({...vehicleData, assignedInstructor: e.target.value});
+
+      fetch('http://localhost:3001/assignInstructorToVehicle', {
+        method: 'PATCH',
+        headers: {
+          Authorization: "Bearer " + props.loginStatus.token,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          assignedInstructor: e.target.value,
+          curVehicle: vehicleId
+        })
+      }).then(res => {
+        if (res.status !== 200) {
+          throw new Error("Failed to assign instructor.");
+        }
+        return res.json();
+      }).then(resData => {
+        console.log(resData);
+      })
+    }
 
   console.log(vehicleData);
 
@@ -64,54 +94,18 @@ const SingleVehicle = (props) => {
           {vehicleData.categories.length === 0 ? (
             <p>No categories added to Vehicle.</p>
           ) : (
-            vehicleData.categories.map((category) => <p> {category.type} </p>)
+            vehicleData.categories.map((category) => <p key={category._id}> {category.type} </p>)
           )}{" "}
         </h5>
-        {/* {courseData.name} TU JESTEM HEHEHHEE {courseData.price}
-      <div className={classes.usersDiv}>
-        <h2>Students in Course</h2>
-        {courseData.studentList.length === 0 && (
-          <p>No students in the course.</p>
-        )}
-        {courseData.studentList.length > 0 &&
-          courseData.studentList.map((student) =>
-            student.payments.map(
-              (payment) =>
-                payment.status === "paid" && (
-                  <Student
-                    paymentStatus={payment.status}
-                    loginStatus={props.loginStatus}
-                    key={student._id}
-                    id={student._id}
-                    firstname={student.firstname}
-                    lastname={student.lastname}
-                    email={student.email}
-                    phoneNumber={student.phoneNumber}
-                    isMember={student.memberId}
-                  />
-                )
-            )
-          )}
-        <p>And those that not paid yet:</p>
-        {courseData.studentList.length > 0 &&
-          courseData.studentList.map((student) =>
-            student.payments.map(
-              (payment) =>
-                payment.status === "unpaid" && (
-                  <Student
-                    paymentStatus={payment.status}
-                    loginStatus={props.loginStatus}
-                    key={student._id}
-                    id={student._id}
-                    firstname={student.firstname}
-                    lastname={student.lastname}
-                    email={student.email}
-                    phoneNumber={student.phoneNumber}
-                    isMember={student.memberId}
-                  />
-                )
-            )
-          )} */}
+        <select value={vehicleData.assignedInstructor} name="instructor" id="instructor" label="Assign Instructor" onChange={setActiveInstructorHandler}>
+          {availableInstructors.map(instructor => {
+            return (
+              <option key={instructor._id} value={instructor._id}>
+                {instructor.firstname + ' ' + instructor.lastname} 
+              </option>
+            ) 
+          })}
+        </select>
       </div>
     </section>
   );

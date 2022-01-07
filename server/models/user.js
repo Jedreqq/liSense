@@ -50,6 +50,9 @@ const User = sequelize.define("user", {
   BranchRequestId: {
     type: DataTypes.INTEGER,
   },
+  instructorRequestId: {
+    type: DataTypes.INTEGER
+  },
   activeBranchId: {
     type: DataTypes.INTEGER,
   }

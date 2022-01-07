@@ -266,8 +266,69 @@ exports.getSingleApplier = async (req, res, next) => {
       throw error;
     }
 
-    console.log(applier);
-    res.status(200).json({ message: "Student fetched.", student: applier });
+    const attendedCourse = await Course.findByPk(applier.attendedCourseId, {
+      include: Category,
+    });
+
+    console.log(attendedCourse.categories);
+
+    const instructors = await User.findAll({
+      where: {
+        memberId: activeBranchId,
+        role: "instructor",
+      },
+      include: Category,
+    });
+
+    let courseCategories = [];
+
+    courseCategories = attendedCourse.categories.map((category) => {
+      return category.type;
+    });
+
+    console.log(courseCategories);
+
+    let instructorsThatMatchCategoriesOfCourse = [];
+
+    instructors.forEach((instructor) => {
+      let helper = [];
+      helper = instructor.categories.map((category) => {
+        return category.type;
+      });
+
+      if (helper.some((v) => courseCategories.indexOf(v) >= 0)) {
+        instructorsThatMatchCategoriesOfCourse.push(instructor);
+      }
+    });
+
+    res.status(200).json({
+      message: "Student fetched.",
+      student: applier,
+      attendedCourse: attendedCourse,
+      instructors: instructorsThatMatchCategoriesOfCourse,
+    });
+  } catch (err) {
+    if (!err.statusCode) {
+      err.statusCode = 500;
+    }
+    next(err);
+  }
+};
+
+exports.assignInstructorToStudent = async (req, res, next) => {
+  const assignedInstructor = req.body.assignedInstructor;
+  const curStudent = req.body.curStudent;
+
+  try {
+    const user = await User.findByPk(curStudent);
+    if (!user) {
+      const error = new Error("Could not find user.");
+      err.statusCode = 404;
+      throw error;
+    }
+    user.assignedInstructorId = assignedInstructor;
+    user.save();
+    res.status(200).json({ message: "Instructor assigned.", user: user });
   } catch (err) {
     if (!err.statusCode) {
       err.statusCode = 500;
@@ -479,9 +540,65 @@ exports.getSingleVehicle = async (req, res, next) => {
       throw error;
     }
 
-    console.log(vehicle);
+    const instructors = await User.findAll({
+      where: {
+        memberId: activeBranchId,
+        role: "instructor",
+      },
+      include: Category,
+    });
 
-    res.status(200).json({ message: "Vehicle fetched.", vehicle: vehicle });
+    let vehicleCategories = [];
+
+    vehicleCategories = vehicle.categories.map((category) => {
+      return category.type;
+    });
+
+    let instructorThatMatchCategoriesOfCourse = [];
+
+    instructors.forEach((instructor) => {
+      let helper = [];
+      helper = instructor.categories.map((category) => {
+        return category.type;
+      });
+
+      if (helper.some((v) => vehicleCategories.indexOf(v) >= 0)) {
+        instructorThatMatchCategoriesOfCourse.push(instructor);
+      }
+    });
+
+    res.status(200).json({
+      message: "Vehicle fetched.",
+      vehicle: vehicle,
+      instructors: instructorThatMatchCategoriesOfCourse,
+    });
+  } catch (err) {
+    if (!err.statusCode) {
+      err.statusCode = 500;
+    }
+    next(err);
+  }
+};
+
+exports.assignInstructorToVehicle = async (req, res, next) => {
+  const assignedInstructorId = req.body.assignedInstructor;
+  const curVehicle = req.body.curVehicle;
+
+  try {
+    const vehicle = await Vehicle.findOne({
+      where: {
+        _id: curVehicle,
+      },
+    });
+    if (!vehicle) {
+      const error = new Error("Could not find vehicle.");
+      err.statusCode = 404;
+      throw error;
+    }
+
+    vehicle.userId = assignedInstructorId;
+    vehicle.save();
+    res.status(200).json({ message: "Instructor assigned.", vehicle: vehicle });
   } catch (err) {
     if (!err.statusCode) {
       err.statusCode = 500;
@@ -624,7 +741,7 @@ exports.joinToCourse = async (req, res, next) => {
 
     const newPayment = new Payment({
       userId: req.userId,
-      name: "User_" + req.userId + "_" + name + "_" + price,
+      name: "User_" + req.userId + "___" + name + "___" + price,
       price: price,
       status: "unpaid",
     });
@@ -769,6 +886,174 @@ exports.changePaymentStatus = async (req, res, next) => {
     res.status(200).json({
       message: `Status of payment changed to opposite for student id#${studentId}.`,
     });
+  } catch (err) {
+    if (!err.statusCode) {
+      err.statusCode = 500;
+    }
+    next(err);
+  }
+};
+
+exports.getBranchPaymentsList = async (req, res, next) => {
+  let activeBranchId;
+  try {
+    const owner = await User.findByPk(req.userId);
+    activeBranchId = owner.activeBranchId;
+    const payments = await Payment.findAll({
+      include: {
+        model: User,
+        where: {
+          memberId: activeBranchId,
+        },
+      },
+    });
+
+    res.status(200).json({
+      payments: payments,
+    });
+  } catch (err) {
+    if (!err.statusCode) {
+      err.statusCode = 500;
+    }
+    next(err);
+  }
+};
+
+exports.getInstructorListForStudent = async (req, res, next) => {
+  let attendedCourseId;
+  try {
+    const user = await User.findOne({
+      where: { _id: req.userId },
+      include: {
+        model: Course,
+        as: "attendedCourse",
+        include: { model: Category },
+      },
+    });
+    attendedCourseId = user.attendedCourseId;
+
+    let studentCourseCategories = [];
+    user.attendedCourse.categories.map((category) => {
+      studentCourseCategories.push(category.type);
+    });
+
+    const instructors = await User.findAll({
+      where: {
+        memberId: attendedCourseId,
+      },
+      include: [Category, Vehicle]
+    });
+
+    let instructorThatMatchCategoriesOfCourse = [];
+
+    instructors.forEach((instructor) => {
+      let helper = [];
+      helper = instructor.categories.map((category) => {
+        return category.type;
+      });
+
+      if (helper.some((v) => studentCourseCategories.indexOf(v) >= 0)) {
+        instructorThatMatchCategoriesOfCourse.push(instructor);
+      }
+    });
+
+    res
+      .status(200)
+      .json({ instructors: instructorThatMatchCategoriesOfCourse });
+  } catch (err) {
+    if (!err.statusCode) {
+      err.statusCode = 500;
+    }
+    next(err);
+  }
+};
+
+exports.sendRequestToInstructor = async (req, res, next) => {
+  const requestedInstructorId = req.body.requestedInstructorId;
+  try {
+    const student = await User.findByPk(req.userId);
+    student.instructorRequestId = requestedInstructorId;
+    const result = student.save();
+    res.status(200).json({
+      message: `Request sent to the instructor #${requestedInstructorId}`,
+      user: student,
+    });
+  } catch (err) {
+    if (!err.statusCode) {
+      err.statusCode = 500;
+    }
+    next(err);
+  }
+};
+
+exports.studentListOfInstructor = async (req, res, next) => {
+  try {
+    const instructor = await User.findByPk(req.userId);
+    if (!instructor) {
+      const error = new Error("Could not find instructor.");
+      err.statusCode = 404;
+      throw error;
+    }
+    const students = await User.findAll({
+      where: {
+        assignedInstructorId: instructor._id,
+        role: "student",
+      },
+    });
+
+    const appliers = await User.findAll({
+      where: {
+        instructorRequestId: instructor._id,
+        role: "student",
+      },
+    });
+    res.status(200).json({
+      message: "Student list fetched.",
+      students: students,
+      appliers: appliers,
+    });
+  } catch (err) {
+    if (!err.statusCode) {
+      err.statusCode = 500;
+    }
+    next(err);
+  }
+};
+
+exports.replyToApplierInstructorRequest = async (req, res, next) => {
+  const decision = req.body.decision;
+  const studentId = req.body.id;
+  try {
+    const user = await User.findByPk(studentId);
+    if (!user) {
+      const error = new Error("User not found.");
+      error.statusCode = 404;
+      throw error;
+    }
+    if (decision !== "accept" && decision !== "reject") {
+      const error = new Error("Invalid response.");
+      error.statusCode = 404;
+      throw error;
+    }
+
+    if (decision === "accept") {
+      user.assignedInstructorId = user.instructorRequestId;
+      user.instructorRequestId = null;
+      user.save();
+      res
+        .status(200)
+        .json({
+          message: `ACCEPT - Student with id ${studentId} accepted by instructor ${req.userId}.`,
+        });
+    } else if (decision === "reject") {
+      user.instructorRequestId = null;
+      user.save();
+      res
+        .status(200)
+        .json({
+          message: `REJECT - Student with id ${studentId} rejected by instructor ${req.userId}.`,
+        });
+    }
   } catch (err) {
     if (!err.statusCode) {
       err.statusCode = 500;
