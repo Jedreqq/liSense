@@ -245,6 +245,7 @@ function App() {
             <SingleStudent
               loginStatus={loginStatus}
               activeBranch={activeBranch}
+              memberId={memberId}
             />
           }
         />

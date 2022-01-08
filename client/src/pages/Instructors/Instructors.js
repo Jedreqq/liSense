@@ -96,6 +96,7 @@ const Instructors = (props) => {
             {instructors.length > 0 &&
               instructors.map((instructor) => (
                 <Instructor
+                curVehicle={instructor.vehicle}
                   loginStatus={props.loginStatus}
                   key={instructor._id}
                   id={instructor._id}

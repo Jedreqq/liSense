@@ -56,6 +56,8 @@ const User = sequelize.define("user", {
   activeBranchId: {
     type: DataTypes.INTEGER,
   }
-});
+
+}, );
+
 
 module.exports = User;

@@ -6,6 +6,7 @@ import classes from "./SingleStudent.module.css";
 const SingleStudent = (props) => {
   const { studentId } = useParams();
   console.log(studentId);
+  let isMember = !!props.isMember;
 
   const [studentData, setStudentData] = useState({
     firstname: "",
@@ -15,7 +16,7 @@ const SingleStudent = (props) => {
     memberId: "",
     city: "",
     attendedCourse: "",
-    assignedInstructor: ""
+    assignedInstructor: "",
   });
 
   const [availableInstructors, setAvailableInstructors] = useState([]);
@@ -41,41 +42,47 @@ const SingleStudent = (props) => {
           phoneNumber: resData.student.phoneNumber,
           memberId: resData.student.memberId,
           city: resData.student.city,
-          attendedCourse: resData.attendedCourse.name,
+          attendedCourse: resData.attendedCourse ? resData.attendedCourse.name : ''
         }));
-        setAvailableInstructors(resData.instructors.map(instructor => {
-          return {
-            ...instructor
-          }
-        }))
+        
+        setAvailableInstructors(
+          resData.instructors ? 
+          resData.instructors.map((instructor) => {
+            return {
+              ...instructor,
+            };
+          }) : ''
+        )
       })
       .catch((err) => {
         console.log(err);
       });
   }, [props.loginStatus.token, studentId]);
 
-  const setAssignedInstructorHandler = e => {
-    setStudentData({...studentData, assignedInstructor: e.target.value});
+  const setAssignedInstructorHandler = (e) => {
+    setStudentData({ ...studentData, assignedInstructor: e.target.value });
 
-    fetch('http://localhost:3001/assignInstructorToStudent', {
-      method: 'PATCH',
+    fetch("http://localhost:3001/assignInstructorToStudent", {
+      method: "PATCH",
       headers: {
         Authorization: "Bearer " + props.loginStatus.token,
-        'Content-Type': 'application/json'
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
         assignedInstructor: e.target.value,
-        curStudent: studentId
-      })
-    }).then(res => {
-      if (res.status !== 200) {
-        throw new Error("Failed to assign instructor.");
-      }
-      return res.json();
-    }).then(resData => {
-      console.log(resData);
+        curStudent: studentId,
+      }),
     })
-  }
+      .then((res) => {
+        if (res.status !== 200) {
+          throw new Error("Failed to assign instructor.");
+        }
+        return res.json();
+      })
+      .then((resData) => {
+        console.log(resData);
+      });
+  };
 
   console.log(studentData);
 
@@ -88,23 +95,33 @@ const SingleStudent = (props) => {
         <h4>
           {studentData.email} {studentData.phoneNumber} {studentData.city}
         </h4>
-        <p>
-          Attended Course: 
-          {studentData.attendedCourse}
-        </p>
-        <p>
-          Assigned Instructor in Course: 
-          <br/>
-          <select value={studentData.assignedInstructor} name="instructor" id="instructor" label="Assign Instructor" onChange={setAssignedInstructorHandler}>
-          {availableInstructors.map(instructor => {
-            return (
-              <option key={instructor._id} value={instructor._id}>
-                {instructor.firstname + ' ' + instructor.lastname} 
-              </option>
-            ) 
-          })}
-        </select>
-        </p>
+        {!!studentData.memberId && studentData.attendedCourse && (
+          <React.Fragment>
+            <p>
+              Attended Course:
+              {studentData.attendedCourse}
+            </p>
+            <p>
+              Assigned Instructor in Course:
+              <br />
+              <select
+                value={studentData.assignedInstructor}
+                name="instructor"
+                id="instructor"
+                label="Assign Instructor"
+                onChange={setAssignedInstructorHandler}
+              >
+                {availableInstructors.map((instructor) => {
+                  return (
+                    <option key={instructor._id} value={instructor._id}>
+                      {instructor.firstname + " " + instructor.lastname}
+                    </option>
+                  );
+                })}
+              </select>
+            </p>
+          </React.Fragment>
+        )}
       </div>
     </section>
   );

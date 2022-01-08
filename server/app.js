@@ -18,6 +18,7 @@ const userRoutes = require("./routes/user");
 const UserCategory = require("./models/user-category");
 const VehicleCategory = require("./models/vehicle-category");
 const CourseCategory = require("./models/course-category");
+const Comment = require("./models/comment");
 
 
 app.use(
@@ -82,8 +83,10 @@ Payment.belongsTo(User);
 User.belongsTo(Course, {as: 'attendedCourse', constraints: false, allowNull: true, defaultValue: null});
 
 User.belongsTo(User, {as: 'assignedInstructor', constraints: false, allowNull: true, defaultValue: null});
-// Course.hasMany(User);
-// User.belongsTo(Course); //instruktor moze byc przypisany do wielu kursow wiec tu bedzie N:M
+
+Comment.belongsTo(User, {as: 'instructor', constraints: false, allowNull: true, onDelete: 'cascade'});
+
+
 
 
 sequelize

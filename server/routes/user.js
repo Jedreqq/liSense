@@ -97,6 +97,7 @@ router.get('/studentListOfInstructor', verifyToken, isInstructor, userController
 
 router.patch('/replyToApplierInstructorRequest', verifyToken, isInstructor, userController.replyToApplierInstructorRequest);
 
+router.post('/postNewComment', verifyToken,  userController.postNewComment);
 
 
 router.post('/addCategory', userController.addCategory);

@@ -8,6 +8,7 @@ const Course = require("../models/course");
 const CourseCategory = require("../models/course-category");
 const Payment = require("../models/payment");
 const { compareSync } = require("bcryptjs");
+const Comment = require("../models/comment");
 const stripe = require("stripe")(
   "sk_test_51KDYX8DHdY0p08Gp7of2nr1GtaPydLV5vLptoSR7hqySoe7np3gYHEY06nWQkRGKzToM25sXICeFvbCI9zj0ypgo00qVaHyBWn"
 );
@@ -260,53 +261,58 @@ exports.getSingleApplier = async (req, res, next) => {
       err.statusCode = 404;
       throw error;
     }
-    if (applier.memberId !== activeBranchId) {
-      const error = new Error("This student is not part of the branch.");
-      err.statusCode = 404;
-      throw error;
-    }
+    if (
+      applier.memberId !== activeBranchId ||
+      applier.attendedCourseId === null
+    ) {
+      console.log("no tutaj");
+      res.status(200).json({
+        message: "Student without or in other branch.",
+        student: applier,
+      });
+    } else {
+      const attendedCourse = await Course.findByPk(applier.attendedCourseId, {
+        include: Category,
+      });
 
-    const attendedCourse = await Course.findByPk(applier.attendedCourseId, {
-      include: Category,
-    });
+      console.log(attendedCourse.categories);
 
-    console.log(attendedCourse.categories);
+      const instructors = await User.findAll({
+        where: {
+          memberId: activeBranchId,
+          role: "instructor",
+        },
+        include: Category,
+      });
 
-    const instructors = await User.findAll({
-      where: {
-        memberId: activeBranchId,
-        role: "instructor",
-      },
-      include: Category,
-    });
+      let courseCategories = [];
 
-    let courseCategories = [];
-
-    courseCategories = attendedCourse.categories.map((category) => {
-      return category.type;
-    });
-
-    console.log(courseCategories);
-
-    let instructorsThatMatchCategoriesOfCourse = [];
-
-    instructors.forEach((instructor) => {
-      let helper = [];
-      helper = instructor.categories.map((category) => {
+      courseCategories = attendedCourse.categories.map((category) => {
         return category.type;
       });
 
-      if (helper.some((v) => courseCategories.indexOf(v) >= 0)) {
-        instructorsThatMatchCategoriesOfCourse.push(instructor);
-      }
-    });
+      console.log(courseCategories);
 
-    res.status(200).json({
-      message: "Student fetched.",
-      student: applier,
-      attendedCourse: attendedCourse,
-      instructors: instructorsThatMatchCategoriesOfCourse,
-    });
+      let instructorsThatMatchCategoriesOfCourse = [];
+
+      instructors.forEach((instructor) => {
+        let helper = [];
+        helper = instructor.categories.map((category) => {
+          return category.type;
+        });
+
+        if (helper.some((v) => courseCategories.indexOf(v) >= 0)) {
+          instructorsThatMatchCategoriesOfCourse.push(instructor);
+        }
+      });
+
+      res.status(200).json({
+        message: "Student fetched.",
+        student: applier,
+        attendedCourse: attendedCourse,
+        instructors: instructorsThatMatchCategoriesOfCourse,
+      });
+    }
   } catch (err) {
     if (!err.statusCode) {
       err.statusCode = 500;
@@ -327,6 +333,9 @@ exports.assignInstructorToStudent = async (req, res, next) => {
       throw error;
     }
     user.assignedInstructorId = assignedInstructor;
+    if (user.instructorRequestId) {
+      user.instructorRequestId = null;
+    }
     user.save();
     res.status(200).json({ message: "Instructor assigned.", user: user });
   } catch (err) {
@@ -413,7 +422,7 @@ exports.getInstructorList = async (req, res, next) => {
     });
     const instructors = await User.findAll({
       where: { memberId: activeBranchId, role: "instructor" },
-      include: Category,
+      include: [Category, Vehicle],
     });
     res.status(200).json({ appliers: appliers, instructors: instructors });
   } catch (err) {
@@ -438,18 +447,26 @@ exports.getSingleInstructor = async (req, res, next) => {
       err.statusCode = 404;
       throw error;
     }
-    if (instructor.memberId !== activeBranchId) {
-      const error = new Error("This instructor is not part of the branch.");
-      err.statusCode = 404;
-      throw error;
-    }
 
-    console.log(instructor);
-
-    res.status(200).json({
-      message: "Instructor fetched.",
-      instructor: instructor,
+    const comments = await Comment.findAll({
+      where: { instructorId: instructor._id },
     });
+
+    if (instructor.memberId !== activeBranchId) {
+      res.status(200).json({
+        message: "Instructor without or in other branch.",
+        instructor: instructor,
+        comments: comments,
+      });
+    } else {
+      console.log(instructor);
+
+      res.status(200).json({
+        message: "Instructor fetched.",
+        instructor: instructor,
+        comments: comments,
+      });
+    }
   } catch (err) {
     if (!err.statusCode) {
       err.statusCode = 500;
@@ -920,7 +937,6 @@ exports.getBranchPaymentsList = async (req, res, next) => {
 };
 
 exports.getInstructorListForStudent = async (req, res, next) => {
-  let attendedCourseId;
   try {
     const user = await User.findOne({
       where: { _id: req.userId },
@@ -930,8 +946,7 @@ exports.getInstructorListForStudent = async (req, res, next) => {
         include: { model: Category },
       },
     });
-    attendedCourseId = user.attendedCourseId;
-
+    //////////////jeśli nie opłaciłęm to nie moge tego robić i basta
     let studentCourseCategories = [];
     user.attendedCourse.categories.map((category) => {
       studentCourseCategories.push(category.type);
@@ -939,9 +954,9 @@ exports.getInstructorListForStudent = async (req, res, next) => {
 
     const instructors = await User.findAll({
       where: {
-        memberId: attendedCourseId,
+        memberId: user.memberId,
       },
-      include: [Category, Vehicle]
+      include: [Category, Vehicle],
     });
 
     let instructorThatMatchCategoriesOfCourse = [];
@@ -1040,20 +1055,39 @@ exports.replyToApplierInstructorRequest = async (req, res, next) => {
       user.assignedInstructorId = user.instructorRequestId;
       user.instructorRequestId = null;
       user.save();
-      res
-        .status(200)
-        .json({
-          message: `ACCEPT - Student with id ${studentId} accepted by instructor ${req.userId}.`,
-        });
+      res.status(200).json({
+        message: `ACCEPT - Student with id ${studentId} accepted by instructor ${req.userId}.`,
+      });
     } else if (decision === "reject") {
       user.instructorRequestId = null;
       user.save();
-      res
-        .status(200)
-        .json({
-          message: `REJECT - Student with id ${studentId} rejected by instructor ${req.userId}.`,
-        });
+      res.status(200).json({
+        message: `REJECT - Student with id ${studentId} rejected by instructor ${req.userId}.`,
+      });
     }
+  } catch (err) {
+    if (!err.statusCode) {
+      err.statusCode = 500;
+    }
+    next(err);
+  }
+};
+
+exports.postNewComment = async (req, res, next) => {
+  const text = req.body.text;
+  console.log(text);
+  const instructorId = req.body.instructorId;
+  let newComment;
+  try {
+    newComment = new Comment({
+      content: text,
+      instructorId: instructorId,
+    });
+    const result = await newComment.save();
+    res.status(201).json({
+      message: "New comment added.",
+      comment: result,
+    });
   } catch (err) {
     if (!err.statusCode) {
       err.statusCode = 500;
