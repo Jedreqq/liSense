@@ -8,31 +8,38 @@ const Instructors = (props) => {
   let memberId = props.memberId;
   let isMember = !!props.memberId;
 
+  const [paymentStatus, setPaymentStatus] = useState("");
+  const [isChanged, setIsChanged] = useState(false);
+
   useEffect(() => {
-    if(isMember) {
+    if (isMember) {
       fetch("http://localhost:3001/instructorListForStudent", {
         headers: {
-          Authorization: "Bearer " + props.loginStatus.token
-        }
-      }).then(res => {
-        if (res.status !== 200) {
-          throw new Error("Failed to fetch instructors list.");
-        }
-        return res.json();
-      }).then(resData => {
-        console.log(resData);
-        setInstructors(
-          resData.instructors.map((instructor) => {
-            return {
-              ...instructor,
-            };
-          })
-        );
-      }).catch(err => {
-        console.log(err);
+          Authorization: "Bearer " + props.loginStatus.token,
+        },
       })
+        .then((res) => {
+          if (res.status !== 200) {
+            throw new Error("Failed to fetch instructors list.");
+          }
+          return res.json();
+        })
+        .then((resData) => {
+          console.log(resData);
+          setInstructors(
+            resData.instructors.map((instructor) => {
+              return {
+                ...instructor,
+              };
+            })
+          );
+          setPaymentStatus(resData.userPaymentStatus[0]);
+        })
+        .catch((err) => {
+          console.log(err);
+        });
     }
-    if(!isMember) {
+    if (!isMember) {
       fetch("http://localhost:3001/instructorList", {
         headers: {
           Authorization: "Bearer " + props.loginStatus.token,
@@ -61,9 +68,14 @@ const Instructors = (props) => {
           );
         })
         .catch((err) => console.log(err));
+      setIsChanged(false);
     }
+  }, [props.loginStatus.token, isMember, isChanged]);
 
-  }, [props.loginStatus.token, isMember]);
+  const updateInstructors = (e, resData) => {
+    e.preventDefault();
+    setIsChanged(true);
+  };
 
   return (
     <div>
@@ -74,6 +86,7 @@ const Instructors = (props) => {
           {instructors.length > 0 &&
             instructors.map((instructor) => (
               <Instructor
+                paymentStatus={paymentStatus}
                 curVehicle={instructor.vehicle}
                 loginStatus={props.loginStatus}
                 key={instructor._id}
@@ -96,7 +109,8 @@ const Instructors = (props) => {
             {instructors.length > 0 &&
               instructors.map((instructor) => (
                 <Instructor
-                curVehicle={instructor.vehicle}
+                  onDecision={updateInstructors}
+                  curVehicle={instructor.vehicle}
                   loginStatus={props.loginStatus}
                   key={instructor._id}
                   id={instructor._id}
@@ -115,6 +129,7 @@ const Instructors = (props) => {
             {appliers.length > 0 &&
               appliers.map((instructor) => (
                 <Instructor
+                  onDecision={updateInstructors}
                   loginStatus={props.loginStatus}
                   key={instructor._id}
                   id={instructor._id}

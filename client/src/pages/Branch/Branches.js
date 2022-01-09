@@ -9,6 +9,7 @@ const Branches = (props) => {
   });
 
   const [showCreateBranchCart, setShowCreateBranchCart] = useState(false);
+  const [isAdded, setIsAdded] = useState(false);
 
   useEffect(() => {
     fetch("http://localhost:3001/ownerBranches", {
@@ -33,12 +34,18 @@ const Branches = (props) => {
         }));
       })
       .catch((err) => console.log(err));
-  }, [props.loginStatus.token]);
+      setIsAdded(false);
+  }, [props.loginStatus.token, isAdded]);
 
   const showCreateBranchCartHandler = (e) => {
     e.preventDefault();
     setShowCreateBranchCart((prevState) => !prevState);
   };
+  
+  const updateBranches = (e, resData) => {
+    e.preventDefault();
+    setIsAdded(true);
+  }
 
   let buttonContent = "Show Branch Creator";
 
@@ -49,7 +56,7 @@ const Branches = (props) => {
   return (
     <div className={classes.branchDiv}>
       <button onClick={showCreateBranchCartHandler}>{buttonContent}</button>
-      {showCreateBranchCart && <CreateBranch loginStatus={props.loginStatus} />}
+      {showCreateBranchCart && <CreateBranch onCreateBranch={updateBranches} loginStatus={props.loginStatus} />}
       {branchesInfo.branches.length === 0 && (
         <div>
           <p>No branches found.</p>

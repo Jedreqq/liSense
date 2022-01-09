@@ -8,6 +8,8 @@ const Fleet = (props) => {
     vehicles: [],
   });
 
+  const [isAdded, setIsAdded] = useState(false);
+
   const [showCreateVehicleCart, setShowCreateVehicleCart] = useState(false);
 
   useEffect(() => {
@@ -33,18 +35,18 @@ const Fleet = (props) => {
       }).catch(err => {
           console.log(err);
       });
-
-    //   fetch("http://localhost:3001/getVehicleCategories", {
-    //       headers: {
-    //           Authorization: "Bearer " + props.loginStatus.token,
-    //       }
-    //   })
-  }, [props.loginStatus.token])
+      setIsAdded(false);
+  }, [props.loginStatus.token, isAdded])
 
   const showCreateVehicleCartHandler = (e) => {
     e.preventDefault();
     setShowCreateVehicleCart((prevState) => !prevState);
   };
+
+  const updateVehicles = (e) => {
+    e.preventDefault();
+    setIsAdded(true);
+  }
 
   let buttonContent = "Show Vehicle Creator";
 
@@ -57,7 +59,7 @@ const Fleet = (props) => {
       <div className={classes.vehiclesDiv}>
         <button onClick={showCreateVehicleCartHandler}>{buttonContent}</button>
         {showCreateVehicleCart && (
-          <CreateVehicle loginStatus={props.loginStatus} activeBranch={props.activeBranch}/>
+          <CreateVehicle onCreateVehicle={updateVehicles} loginStatus={props.loginStatus} activeBranch={props.activeBranch}/>
         )}
         <h2>Vehicles in branch</h2>
         {vehicles.vehicles.length === 0 && <p>No vehicles in branch.</p>}

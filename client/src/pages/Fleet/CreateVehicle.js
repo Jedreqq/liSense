@@ -90,6 +90,7 @@ const CreateVehicle = (props) => {
       })
       .then((resData) => {
         console.log(resData);
+        props.onCreateVehicle(e, resData);
       })
       .catch((err) => {
         console.log(err);

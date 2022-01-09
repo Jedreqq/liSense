@@ -391,6 +391,16 @@ function App() {
             />
           }
         />
+                <Route
+          path="/instructors/:instructorId"
+          element={
+            <SingleInstructor
+              loginStatus={loginStatus}
+              activeBranch={activeBranch}
+              memberId={memberId}
+            />
+          }
+        />
         <Route
           path="/courses"
           exact

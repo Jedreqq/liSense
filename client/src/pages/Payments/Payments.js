@@ -7,6 +7,8 @@ const Payments = (props) => {
     payments: [],
   });
 
+  const [isChanged, setIsChanged] = useState(false);
+
   useEffect(() => {
     fetch("http://localhost:3001/branchPaymentsList", {
       headers: {
@@ -29,11 +31,17 @@ const Payments = (props) => {
             };
           }),
         }));
+        setIsChanged(false);
       })
       .catch((err) => {
         console.log(err);
       });
-  }, [props.loginStatus.token]);
+  }, [props.loginStatus.token, isChanged]);
+
+  const changePayment = (e, resData) => {
+      e.preventDefault();
+    setIsChanged(true);
+  }
 
   return (
     <div>
@@ -53,6 +61,7 @@ const Payments = (props) => {
           </tr>
           {payments.payments.map((payment) => (
               <Payment
+              onChanged={changePayment}
               loginStatus={props.loginStatus}
               key={payment._id}
               id={payment._id}

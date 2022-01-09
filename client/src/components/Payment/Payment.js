@@ -36,6 +36,7 @@ const Payment = (props) => {
       })
       .then((resData) => {
         console.log(resData);
+        props.onChanged(e, resData);
       })
       .catch((err) => console.log(err));
   };

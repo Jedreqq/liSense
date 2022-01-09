@@ -101,6 +101,7 @@ const CreateCourse = (props) => {
       })
       .then((resData) => {
         console.log(resData);
+        props.onCreateCourse(e, resData);
       })
       .catch((err) => {
         console.log(err);

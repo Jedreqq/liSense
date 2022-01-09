@@ -7,6 +7,7 @@ const Instructor = (props) => {
   let isStudent = props.loginStatus.userRole === "student";
   let isMember = props.isMember;
   let isOwner = props.loginStatus.userRole === "owner";
+  let isPaid = props.paymentStatus === 'paid';
   const vehicle = props.curVehicle;
   console.log(vehicle)
 
@@ -35,6 +36,7 @@ const Instructor = (props) => {
       })
       .then((resData) => {
         console.log(resData);
+        props.onDecision(e, resData);
       })
       .catch((err) => console.log(err));
   };
@@ -64,6 +66,7 @@ const Instructor = (props) => {
       })
       .then((resData) => {
         console.log(resData);
+        props.onDecision(e, resData);
       })
       .catch((err) => console.log(err));
   };
@@ -76,11 +79,12 @@ const Instructor = (props) => {
         <header>
           <h2>{` ${props.firstname} ${props.lastname}
           (${props.curVehicle ? `${props.curVehicle.brand} ${props.curVehicle.model}` : 'Currently unassigned.'}`})</h2>
-          {isStudent && (
+          {isStudent && isPaid && (
             <Button onClick={sendRequestToInstructorHandler}>
               Send Request
             </Button>
           )}
+          {isStudent && !isPaid && <p>You need to pay for the course first!</p>}
           {!isMember && (
             <React.Fragment>
               <div>
@@ -106,7 +110,7 @@ const Instructor = (props) => {
               </React.Fragment>
             </React.Fragment>
           )}
-          {isOwner && (
+          {(isOwner || isStudent) && (
             <div className={classes.instructorActions}>
               <ButtonLink link={link}>Details</ButtonLink>
             </div>

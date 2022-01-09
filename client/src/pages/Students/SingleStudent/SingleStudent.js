@@ -17,6 +17,7 @@ const SingleStudent = (props) => {
     city: "",
     attendedCourse: "",
     assignedInstructor: "",
+    paymentStatus: "",
   });
 
   const [availableInstructors, setAvailableInstructors] = useState([]);
@@ -34,6 +35,9 @@ const SingleStudent = (props) => {
         return res.json();
       })
       .then((resData) => {
+        console.log(resData.student.payments.map(payment => {
+          return payment.status
+        }))
         setStudentData((studentInfo) => ({
           ...studentInfo,
           firstname: resData.student.firstname,
@@ -42,17 +46,25 @@ const SingleStudent = (props) => {
           phoneNumber: resData.student.phoneNumber,
           memberId: resData.student.memberId,
           city: resData.student.city,
-          attendedCourse: resData.attendedCourse ? resData.attendedCourse.name : ''
+          attendedCourse: resData.attendedCourse
+            ? resData.attendedCourse.name
+            : "",
+          paymentStatus: resData.student.payments
+            ? resData.student.payments.map((payment) => {
+                return payment.status;
+              })
+            : "",
         }));
-        
+
         setAvailableInstructors(
-          resData.instructors ? 
-          resData.instructors.map((instructor) => {
-            return {
-              ...instructor,
-            };
-          }) : ''
-        )
+          resData.instructors
+            ? resData.instructors.map((instructor) => {
+                return {
+                  ...instructor,
+                };
+              })
+            : ""
+        );
       })
       .catch((err) => {
         console.log(err);
@@ -95,33 +107,44 @@ const SingleStudent = (props) => {
         <h4>
           {studentData.email} {studentData.phoneNumber} {studentData.city}
         </h4>
-        {!!studentData.memberId && studentData.attendedCourse && (
+        {studentData.paymentStatus[0] !== "paid" && (
           <React.Fragment>
             <p>
               Attended Course:
               {studentData.attendedCourse}
             </p>
-            <p>
-              Assigned Instructor in Course:
-              <br />
-              <select
-                value={studentData.assignedInstructor}
-                name="instructor"
-                id="instructor"
-                label="Assign Instructor"
-                onChange={setAssignedInstructorHandler}
-              >
-                {availableInstructors.map((instructor) => {
-                  return (
-                    <option key={instructor._id} value={instructor._id}>
-                      {instructor.firstname + " " + instructor.lastname}
-                    </option>
-                  );
-                })}
-              </select>
-            </p>
+            <p>Student has to pay for the course first.</p>
           </React.Fragment>
         )}
+        {!!studentData.memberId &&
+          studentData.attendedCourse &&
+          studentData.paymentStatus[0] === "paid" && (
+            <React.Fragment>
+              <p>
+                Attended Course:
+                {studentData.attendedCourse}
+              </p>
+              <p>
+                Assigned Instructor in Course:
+                <br />
+                <select
+                  value={studentData.assignedInstructor}
+                  name="instructor"
+                  id="instructor"
+                  label="Assign Instructor"
+                  onChange={setAssignedInstructorHandler}
+                >
+                  {availableInstructors.map((instructor) => {
+                    return (
+                      <option key={instructor._id} value={instructor._id}>
+                        {instructor.firstname + " " + instructor.lastname}
+                      </option>
+                    );
+                  })}
+                </select>
+              </p>
+            </React.Fragment>
+          )}
       </div>
     </section>
   );

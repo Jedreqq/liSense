@@ -5,6 +5,7 @@ import classes from "./Students.module.css";
 const Students = (props) => {
   const [appliers, setAppliers] = useState([]);
   const [students, setStudents] = useState([]);
+  const [isChanged, setIsChanged] = useState(false);
 
   useEffect(() => {
     if (props.loginStatus.userRole === "owner") {
@@ -34,6 +35,7 @@ const Students = (props) => {
               };
             })
           );
+          setIsChanged(false);
         })
         .catch((err) => console.log(err));
     }
@@ -65,12 +67,18 @@ const Students = (props) => {
               };
             })
           );
+          setIsChanged(false);
         })
         .catch((err) => {
           console.log(err);
         });
     }
-  }, [props.loginStatus.token, props.loginStatus.userRole]);
+  }, [props.loginStatus.token, props.loginStatus.userRole, isChanged]);
+
+  const updateStudents = (e, resData) => {
+    e.preventDefault();
+    setIsChanged(true);
+  }
 
   return (
     <div>
@@ -80,6 +88,7 @@ const Students = (props) => {
         {students.length > 0 &&
           students.map((student) => (
             <Student
+              onDecision={updateStudents}
               loginStatus={props.loginStatus}
               key={student._id}
               id={student._id}

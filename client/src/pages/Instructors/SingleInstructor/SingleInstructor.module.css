@@ -1,17 +1,48 @@
 .instructorDiv {
-    width: 100%;
-    margin: auto;
-    padding: 1rem;
-    border: 1px solid #3b0062;
-    border-radius: 5px;
-    background-color: rgba(207, 237, 252, 0.062);
+  width: 100%;
+  margin: auto;
+  padding: 1rem;
+  border: 1px solid #3b0062;
+  border-radius: 5px;
+  background-color: rgba(207, 237, 252, 0.062);
 }
 
 .category {
-    display: inline-block;
-    border: 1px solid black;
-    border-radius: 10px;
-    padding: 0 1rem;
-    margin: 0 0.5rem;
-    background-color:rgba(136, 188, 206, 0.5);
+  display: inline-block;
+  border: 1px solid black;
+  border-radius: 10px;
+  padding: 0 1rem;
+  margin: 0 0.5rem;
+  background-color: rgba(136, 188, 206, 0.5);
+}
+
+.commentsSection {
+  padding: 10px;
+  background-color: rgba(133, 142, 145, 0.068);
+  border-radius: 5px;
+}
+
+.addCommentContainer {
+  margin-top: 25px;
+}
+
+.commentsList {
+  height: auto;
+  padding: 5px;
+}
+
+.commentsList .singleComment {
+  width: 80%;
+  height: auto;
+  padding: 10px;
+  background-color:  rgba(78, 94, 100, 0.068);;
+  border: 1px solid lightblue;
+  border-radius: 5px;
+  margin-top: 20px;
+}
+
+.commentDate {
+    border-top: none;
+    font-size: 0.6rem;
+    font-weight: bold;
 }

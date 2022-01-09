@@ -6,6 +6,8 @@ import Input from "../../../components/Input/Input";
 import classes from "./SingleInstructor.module.css";
 
 const SingleInstructor = (props) => {
+  const isStudent = props.loginStatus.userRole === "student";
+  const isOwner = props.loginStatus.userRole === "owner";
   const { instructorId } = useParams();
   console.log(instructorId);
 
@@ -21,45 +23,80 @@ const SingleInstructor = (props) => {
     comments: [],
   });
 
-  const [newComment, setNewComment] = useState();
+  const [assignedInstructorId, setAssignedInstructorId] = useState();
+  const [newComment, setNewComment] = useState("");
   useEffect(() => {
-    fetch("http://localhost:3001/instructorList/" + instructorId, {
-      headers: {
-        Authorization: "Bearer " + props.loginStatus.token,
-      },
-    })
-      .then((res) => {
-        if (res.status !== 200) {
-          throw new Error("Failed to fetch status");
-        }
-        return res.json();
+    if (props.loginStatus.userRole === "owner") {
+      fetch("http://localhost:3001/instructorList/" + instructorId, {
+        headers: {
+          Authorization: "Bearer " + props.loginStatus.token,
+        },
       })
-      .then((resData) => {
-        console.log(resData);
-        setInstructorData((instructorInfo) => ({
-          ...instructorInfo,
-          firstname: resData.instructor.firstname,
-          lastname: resData.instructor.lastname,
-          email: resData.instructor.email,
-          phoneNumber: resData.instructor.phoneNumber,
-          memberId: resData.instructor.memberId,
-          city: resData.instructor.city,
-          categories: resData.instructor.categories.map((category) => {
-            return {
-              ...category,
-            };
-          }),
-          comments: resData.comments.map((comment) => {
-            return {
-              ...comment,
-            };
-          }),
-        }));
+        .then((res) => {
+          if (res.status !== 200) {
+            throw new Error("Failed to fetch status");
+          }
+          return res.json();
+        })
+        .then((resData) => {
+          console.log(resData);
+          setInstructorData((instructorInfo) => ({
+            ...instructorInfo,
+            firstname: resData.instructor.firstname,
+            lastname: resData.instructor.lastname,
+            email: resData.instructor.email,
+            phoneNumber: resData.instructor.phoneNumber,
+            memberId: resData.instructor.memberId,
+            city: resData.instructor.city,
+            categories: resData.instructor.categories.map((category) => {
+              return {
+                ...category,
+              };
+            }),
+            comments: resData.comments.map((comment) => {
+              return {
+                ...comment,
+              };
+            }),
+          }));
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+    }
+    if (props.loginStatus.userRole === "student") {
+      fetch("http://localhost:3001/instructorListForStudent/" + instructorId, {
+        headers: {
+          Authorization: "Bearer " + props.loginStatus.token,
+        },
       })
-      .catch((err) => {
-        console.log(err);
-      });
-  }, [props.loginStatus.token, instructorId]);
+        .then((res) => {
+          if (res.status !== 200) {
+            throw new Error("Failed to fetch status");
+          }
+          return res.json();
+        })
+        .then((resData) => {
+          console.log(resData);
+          setAssignedInstructorId(resData.assignedInstructorId);
+          setInstructorData((instructorInfo) => ({
+            ...instructorInfo,
+            firstname: resData.instructor.firstname,
+            lastname: resData.instructor.lastname,
+            phoneNumber: resData.instructor.phoneNumber,
+            memberId: resData.instructor.memberId,
+            comments: resData.comments.map((comment) => {
+              return {
+                ...comment,
+              };
+            }),
+          }));
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+    }
+  }, [props.loginStatus.token, instructorId, props.loginStatus.userRole]);
 
   const addCommentHandler = (e) => {
     e.preventDefault();
@@ -85,6 +122,12 @@ const SingleInstructor = (props) => {
         return res.json();
       })
       .then((resData) => {
+        const commentAdded = { content: newComment };
+        setInstructorData({
+          ...instructorData,
+          comments: [...instructorData.comments, commentAdded],
+        });
+        setNewComment("");
         console.log(resData);
       })
       .catch((err) => {
@@ -98,45 +141,53 @@ const SingleInstructor = (props) => {
     <section>
       <div className={classes.instructorDiv}>
         <h3>
-          {instructorData.firstname} {instructorData.lastname}
+          {instructorData.firstname} {instructorData.lastname}{" "}
+          {instructorData.phoneNumber}
         </h3>
-        <h4>
-          {instructorData.email} {instructorData.phoneNumber}{" "}
-          {instructorData.city}
-        </h4>
-        <h5>
-          Categories:
-          {instructorData.categories.length === 0 ? (
-            <div>
-              <p>Instructor has zero categories.</p>
-            </div>
-          ) : (
-            <div>
-              {instructorData.categories.map((category) => (
-                <p key={category._id} className={classes.category}>
-                  {category.type}{" "}
-                </p>
-              ))}
+        {isOwner ? (
+          <React.Fragment>
+            <h4>
+              {instructorData.email} {instructorData.city}
+            </h4>
+            <h5>
+              Categories:
+              {instructorData.categories.length === 0 ? (
+                <div>
+                  <p>Instructor has zero categories.</p>
+                </div>
+              ) : (
+                <div>
+                  {instructorData.categories.map((category) => (
+                    <p key={category._id} className={classes.category}>
+                      {category.type}{" "}
+                    </p>
+                  ))}
+                </div>
+              )}
+            </h5>
+          </React.Fragment>
+        ) : (
+          <></>
+        )}
+        <div className={classes.commentsSection}>
+          <h4>Comments Section</h4>
+          {isStudent && +assignedInstructorId === +instructorId && (
+            <div className={classes.addCommentContainer}>
+              <form onSubmit={addCommentHandler}>
+                <Input
+                  value={newComment}
+                  id="newComment"
+                  label="Comment Below"
+                  type="text"
+                  control="input"
+                  onChange={(e) => {
+                    setNewComment(e.target.value);
+                  }}
+                />
+                <Button type="submit">Add New Comment</Button>
+              </form>
             </div>
           )}
-        </h5>
-        <div className={classes.commentsSection}>
-          <hr />
-          <h4>Comments Section</h4>
-          <div className={classes.addCommentContainer}>
-            <form onSubmit={addCommentHandler}>
-              <Input
-                id="newComment"
-                label="Comment Below"
-                type="text"
-                control="input"
-                onChange={(e) => {
-                  setNewComment(e.target.value);
-                }}
-              />
-              <Button type="submit">Add New Comment</Button>
-            </form>
-          </div>
           <div className={classes.commentsList}>
             {instructorData.comments.length === 0 ? (
               <p>No comments yet.</p>
@@ -144,6 +195,11 @@ const SingleInstructor = (props) => {
               instructorData.comments.map((comment, key) => {
                 return (
                   <div key={key} className={classes.singleComment}>
+                    <p className={classes.commentDate}>
+                      {comment.createdAt
+                        ? comment.createdAt.slice(0, 16).replace("T", " ")
+                        : new Date().toJSON().slice(0, 16).replace("T", " ")}
+                    </p>
                     {comment.content}
                   </div>
                 );

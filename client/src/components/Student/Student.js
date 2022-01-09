@@ -36,6 +36,7 @@ const Student = (props) => {
         })
         .then((resData) => {
           console.log(resData);
+          props.onDecision(e, resData);
         })
         .catch((err) => console.log(err));
     }
@@ -63,6 +64,7 @@ const Student = (props) => {
         })
         .then((resData) => {
           console.log(resData);
+          props.onDecision(e, resData);
         })
         .catch((err) => console.log(err));
     }
@@ -93,6 +95,7 @@ const Student = (props) => {
       })
       .then((resData) => {
         console.log(resData);
+        props.onDecision(e, resData);
       })
       .catch((err) => console.log(err));
   };

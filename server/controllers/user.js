@@ -255,7 +255,7 @@ exports.getSingleApplier = async (req, res, next) => {
   try {
     const owner = await User.findByPk(req.userId);
     activeBranchId = owner.activeBranchId;
-    const applier = await User.findByPk(studentId);
+    const applier = await User.findByPk(studentId, {include: Payment});
     if (!applier) {
       const error = new Error("Could not find vehicle.");
       err.statusCode = 404;
@@ -433,6 +433,38 @@ exports.getInstructorList = async (req, res, next) => {
   }
 };
 
+exports.getSingleInstructorOfStudent = async (req, res, next) => {
+  let assignedInstructorId;
+  const instructorId = req.params.instructorId;
+  try {
+    const student = await User.findByPk(req.userId);
+    assignedInstructorId = student.assignedInstructorId;
+
+    const instructor = await User.findByPk(instructorId);
+
+    if (!instructor) {
+      const error = new Error("Could not find instructor.");
+      err.statusCode = 404;
+      throw error;
+    }
+    const comments = await Comment.findAll({
+      where: { instructorId: instructor._id },
+    });
+
+    res.status(200).json({
+      message: "Instructor fetched.",
+      instructor: instructor,
+      comments: comments,
+      assignedInstructorId: assignedInstructorId,
+    });
+  } catch (err) {
+    if (!err.statusCode) {
+      err.statusCode = 500;
+    }
+    next(err);
+  }
+};
+
 exports.getSingleInstructor = async (req, res, next) => {
   let activeBranchId;
   const instructorId = req.params.instructorId;
@@ -509,6 +541,7 @@ exports.createVehicle = async (req, res, next) => {
     res.status(201).json({
       message: "Vehicle saved successfully.",
       vehicle: result,
+      categories: categories
     });
   } catch (err) {
     if (!err.statusCode) {
@@ -940,14 +973,20 @@ exports.getInstructorListForStudent = async (req, res, next) => {
   try {
     const user = await User.findOne({
       where: { _id: req.userId },
-      include: {
-        model: Course,
-        as: "attendedCourse",
-        include: { model: Category },
-      },
+      include: [
+        { model: Course, as: "attendedCourse", include: { model: Category } },
+        { model: Payment },
+      ],
     });
+
+    let userPaymentStatus = user.payments.map(payment => {return payment.status});
     //////////////jeśli nie opłaciłęm to nie moge tego robić i basta
     let studentCourseCategories = [];
+    if(!user.attendedCourse) {
+      const error = new Error("You need to select course first.");
+      error.statusCode = 401;
+      throw error;
+    }
     user.attendedCourse.categories.map((category) => {
       studentCourseCategories.push(category.type);
     });
@@ -974,7 +1013,7 @@ exports.getInstructorListForStudent = async (req, res, next) => {
 
     res
       .status(200)
-      .json({ instructors: instructorThatMatchCategoriesOfCourse });
+      .json({ instructors: instructorThatMatchCategoriesOfCourse, userPaymentStatus: userPaymentStatus});
   } catch (err) {
     if (!err.statusCode) {
       err.statusCode = 500;

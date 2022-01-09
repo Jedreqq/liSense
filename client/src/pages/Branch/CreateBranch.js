@@ -41,7 +41,7 @@ const CreateBranch = props => {
           })
           .then((resData) => {
             console.log(resData);
-            window.location.reload()
+            props.onCreateBranch(e, resData);
           })
           .catch((err) => console.log(err));
       };

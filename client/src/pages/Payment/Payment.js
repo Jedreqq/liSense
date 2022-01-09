@@ -15,6 +15,7 @@ const Payment = (props) => {
     name: "",
     status: "",
   });
+  const [isChanged, setIsChanged] = useState(false);
 
   const [msg, setMsg] = useState("");
 
@@ -52,11 +53,12 @@ const Payment = (props) => {
           sessionId: id
         })
       })
+      setIsChanged(true);
     }
     if (query.get("canceled")) {
       setMsg("Try again.");
     }
-  }, [props.loginStatus.token]);
+  }, [props.loginStatus.token, isChanged]);
 
   const payForCourseHandler = async (e) => {
     e.preventDefault();

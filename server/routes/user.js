@@ -99,6 +99,7 @@ router.patch('/replyToApplierInstructorRequest', verifyToken, isInstructor, user
 
 router.post('/postNewComment', verifyToken,  userController.postNewComment);
 
+router.get('/instructorListForStudent/:instructorId', verifyToken, isStudent, userController.getSingleInstructorOfStudent);
 
 router.post('/addCategory', userController.addCategory);
 

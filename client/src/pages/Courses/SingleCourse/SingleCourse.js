@@ -7,6 +7,8 @@ import classes from "./SingleCourse.module.css";
 const SingleCourse = (props) => {
   const { courseId } = useParams();
 
+  const [isChanged, setIsChanged] = useState(false);
+
   const [courseData, setCourseData] = useState({
     name: "",
     price: "",
@@ -47,16 +49,21 @@ const SingleCourse = (props) => {
             };
           }),
         }));
+        setIsChanged(false);
       })
       .catch((err) => {
         console.log(err);
       });
-  }, [props.loginStatus.token, courseId]);
+  }, [props.loginStatus.token, courseId, isChanged]);
 
   courseData.studentList.map((student) =>
     student.payments.map((payment) => console.log(payment.status))
   );
 
+  const updateSingleCourse = (e, resData) => {
+    e.preventDefault();
+    setIsChanged(prevState => !prevState);
+  }
   console.log(courseData);
 
   return (
@@ -75,6 +82,7 @@ const SingleCourse = (props) => {
               (payment) =>
                 payment.status === "paid" && (
                   <Student
+                    onDecision={updateSingleCourse}
                     paymentStatus={payment.status}
                     loginStatus={props.loginStatus}
                     key={student._id}
@@ -95,6 +103,7 @@ const SingleCourse = (props) => {
               (payment) =>
                 payment.status === "unpaid" && (
                   <Student
+                    onDecision={updateSingleCourse}
                     paymentStatus={payment.status}
                     loginStatus={props.loginStatus}
                     key={student._id}

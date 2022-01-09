@@ -10,6 +10,8 @@ const Courses = (props) => {
     courses: [],
   });
 
+  const [isAdded, setIsAdded] = useState(false);
+
   useEffect(() => {
     if (props.loginStatus.userRole === "owner") {
       fetch("http://localhost:3001/courseList", {
@@ -37,6 +39,7 @@ const Courses = (props) => {
         .catch((err) => {
           console.log(err);
         });
+        setIsAdded(false);
     }
 
     if (props.loginStatus.userRole === "student") {
@@ -67,7 +70,7 @@ const Courses = (props) => {
           console.log(err);
         });
     }
-  }, [props.loginStatus.token, props.loginStatus.userRole]);
+  }, [props.loginStatus.token, props.loginStatus.userRole, isAdded]);
 
   const [showCreateCourseCart, setShowCreateCourseCart] = useState(false);
 
@@ -75,6 +78,11 @@ const Courses = (props) => {
     e.preventDefault();
     setShowCreateCourseCart((prevState) => !prevState);
   };
+
+  const updateCourses = (e, resData) => {
+    e.preventDefault();
+    setIsAdded(true);
+  }
 
   let buttonContent = "Show Course Creator";
 
@@ -95,6 +103,7 @@ const Courses = (props) => {
           <button onClick={showCreateCourseCartHandler}>{buttonContent}</button>
           {showCreateCourseCart && (
             <CreateCourse
+            onCreateCourse={updateCourses}
               loginStatus={props.loginStatus}
               activeBranch={props.activeBranch}
             />
