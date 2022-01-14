@@ -4,20 +4,7 @@ import Input from "../../components/Input/Input";
 import Auth from "./Auth";
 import classes from "./Auth.module.css";
 
-// const initialValues = {
-//   role: "student",
-//   email: "",
-//   password: "",
-//   firstname: "",
-//   lastname: "",
-//   usercity: "",
-//   postalcode: "",
-//   phonenumber: "",
-//   confirmpassword: ""
-// };
-
 const SignupPage = (props) => {
-  //const [instructorCategories, setInstructorCategories] = useState([]);
 
   const [signupData, setSignupData] = useState({
     role: "student",
@@ -41,13 +28,9 @@ const SignupPage = (props) => {
         ...prevState,
         categories: [...prevState.categories.concat(checkedCategory)],
       }));
-      // setInstructorCategories([...instructorCategories, checkedCategory]);
     } else {
       var index = categoriesList.indexOf(checkedCategory);
       if (index > -1) {
-      //  categoriesList.splice(index, 1);
-      //  console.log(categoriesList);
-        
         setSignupData((prevState) => ({
           ...prevState,
           categories: [...prevState.categories.filter(element => element !== categoriesList[index])],

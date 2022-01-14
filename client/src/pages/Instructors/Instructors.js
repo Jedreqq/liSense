@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Instructor from "../../components/Instructor/Instructor";
+import Loader from "../../components/Loader/Loader";
 import classes from "./Instructors.module.css";
 
 const Instructors = (props) => {
@@ -7,77 +8,84 @@ const Instructors = (props) => {
   const [instructors, setInstructors] = useState([]);
   let memberId = props.memberId;
   let isMember = !!props.memberId;
+  const [isLoaded, setIsLoaded] = useState(false);
 
   const [paymentStatus, setPaymentStatus] = useState("");
   const [isChanged, setIsChanged] = useState(false);
 
-  useEffect(() => {
+  const loadInstructors = useCallback(async () => {
     if (isMember) {
-      fetch("http://localhost:3001/instructorListForStudent", {
-        headers: {
-          Authorization: "Bearer " + props.loginStatus.token,
-        },
-      })
-        .then((res) => {
-          if (res.status !== 200) {
-            throw new Error("Failed to fetch instructors list.");
+      try {
+        const res = await fetch(
+          "http://localhost:3001/instructorListForStudent",
+          {
+            headers: {
+              Authorization: "Bearer " + props.loginStatus.token,
+            },
           }
-          return res.json();
-        })
-        .then((resData) => {
-          console.log(resData);
-          setInstructors(
-            resData.instructors.map((instructor) => {
-              return {
-                ...instructor,
-              };
-            })
-          );
-          setPaymentStatus(resData.userPaymentStatus[0]);
-        })
-        .catch((err) => {
-          console.log(err);
-        });
+        );
+        if (res.status !== 200) {
+          throw new Error("Failed to fetch instructors list.");
+        }
+        const resData = await res.json();
+
+        setInstructors(
+          resData.instructors.map((instructor) => {
+            return {
+              ...instructor,
+            };
+          })
+        );
+        setPaymentStatus(resData.userPaymentStatus[0]);
+        setIsChanged(false);
+      } catch (err) {
+        console.log(err);
+      }
     }
     if (!isMember) {
-      fetch("http://localhost:3001/instructorList", {
-        headers: {
-          Authorization: "Bearer " + props.loginStatus.token,
-        },
-      })
-        .then((res) => {
-          if (res.status !== 200) {
-            throw new Error("Failed to fetch instructors list.");
-          }
-          return res.json();
-        })
-        .then((resData) => {
-          setAppliers(
-            resData.appliers.map((applier) => {
-              return {
-                ...applier,
-              };
-            })
-          );
-          setInstructors(
-            resData.instructors.map((instructor) => {
-              return {
-                ...instructor,
-              };
-            })
-          );
-        })
-        .catch((err) => console.log(err));
-      setIsChanged(false);
+      try {
+        const res = await fetch("http://localhost:3001/instructorList", {
+          headers: {
+            Authorization: "Bearer " + props.loginStatus.token,
+          },
+        });
+        if (res.status !== 200) {
+          throw new Error("Failed to fetch instructors list.");
+        }
+        const resData = await res.json();
+
+        setAppliers(
+          resData.appliers.map((applier) => {
+            return {
+              ...applier,
+            };
+          })
+        );
+        setInstructors(
+          resData.instructors.map((instructor) => {
+            return {
+              ...instructor,
+            };
+          })
+        );
+        setIsChanged(false);
+      } catch (err) {
+        console.log(err);
+      }
     }
-  }, [props.loginStatus.token, isMember, isChanged]);
+  }, [isMember, props.loginStatus.token]);
+
+  useEffect(
+    () => loadInstructors().finally((x) => setIsLoaded(true)),
+    [props.loginStatus.token, isChanged, setIsLoaded, loadInstructors]
+  );
 
   const updateInstructors = (e, resData) => {
     e.preventDefault();
     setIsChanged(true);
   };
 
-  return (
+  return isLoaded ? (
     <div>
       {isMember && (
         <div className={classes.instructorsDiv}>
@@ -143,6 +151,10 @@ const Instructors = (props) => {
           </div>
         </div>
       )}
+    </div>
+  ) : (
+    <div className={classes.centered}>
+      <Loader />
     </div>
   );
 };

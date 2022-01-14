@@ -1,0 +1,68 @@
+.SingleMessageDiv {
+  width: 100%;
+  margin: auto;
+  padding: 1rem;
+  border: 1px solid #3b0062;
+  border-radius: 5px;
+  background-color: rgba(207, 237, 252, 0.062);
+  height: auto;
+}
+
+.container {
+  display: grid;
+  width: 100%;
+  grid-template-columns: 0.6fr 1.4fr;
+  grid-template-rows: 0.1fr 0.2fr 0.7fr;
+  gap: 2px 2px;
+  margin: auto;
+  padding: 1rem;
+  border: 1px solid #3b0062;
+  border-radius: 5px;
+  background-color: #00808010;
+    padding-bottom: 2rem;
+}
+
+.btnDiv {
+    width: 20%;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.container .topic {
+  grid-area: 1/1/2/3;
+  font-size: 1.4rem;
+}
+.containerP {
+  display: block;
+  margin: 1px;
+  border: none;
+}
+.leftSide {
+  background-color: #00808027;
+  grid-area: 2/1/4/2;
+  padding-bottom: 1rem;
+  
+}
+
+.leftSide p {
+    border: none;
+    margin: 0.5rem 0 0 1rem;
+}
+
+.rightSide {
+  background-color: #00808027;
+  grid-area: 2/2/4/3;
+  padding-bottom: 5rem;
+}
+
+.rightSide p {
+    border: none;
+    margin: 1rem 0 0 1rem;
+}
+
+.centered {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}

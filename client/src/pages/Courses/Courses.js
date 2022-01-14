@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import CreateCourse from "./CreateCourse";
 import classes from "./Courses.module.css";
 import Course from "../../components/Course/Course";
 import ButtonLink from "../../components/ButtonLink/ButtonLink";
+import Loader from "../../components/Loader/Loader";
 
 const Courses = (props) => {
   const [attendedCourseId, setAttendedCourseId] = useState();
@@ -11,51 +12,47 @@ const Courses = (props) => {
   });
 
   const [isAdded, setIsAdded] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
 
-  useEffect(() => {
+  const loadCourses = useCallback(async () => {
     if (props.loginStatus.userRole === "owner") {
-      fetch("http://localhost:3001/courseList", {
-        headers: {
-          Authorization: "Bearer " + props.loginStatus.token,
-        },
-      })
-        .then((res) => {
-          if (res.status !== 200) {
-            throw new Error("Failed to fetch courses.");
-          }
-          return res.json();
+      try {
+
+        const res = await fetch("http://localhost:3001/courseList", {
+          headers: {
+            Authorization: "Bearer " + props.loginStatus.token,
+          },
         })
-        .then((resData) => {
-          console.log(resData.courses);
-          setCourses((coursesInfo) => ({
-            ...coursesInfo,
-            courses: resData.courses.map((course) => {
-              return {
-                ...course,
-              };
-            }),
-          }));
-        })
-        .catch((err) => {
-          console.log(err);
-        });
+        if (res.status !== 200) {
+          throw new Error("Failed to fetch courses.");
+        }
+        
+        const resData = await res.json();
+        setCourses((coursesInfo) => ({
+          ...coursesInfo,
+          courses: resData.courses.map((course) => {
+            return {
+              ...course,
+            };
+          }),
+        }));
         setIsAdded(false);
+      } catch (err) {
+        console.log(err);
+      }
     }
 
     if (props.loginStatus.userRole === "student") {
-      fetch("http://localhost:3001/memberCourses", {
+      try {
+      const res = await fetch("http://localhost:3001/memberCourses", {
         headers: {
           Authorization: "Bearer " + props.loginStatus.token,
         },
       })
-        .then((res) => {
           if (res.status !== 200) {
             throw new Error("Failed to fetch courses.");
           }
-          return res.json();
-        })
-        .then((resData) => {
-          console.log(resData.courses);
+          const resData = await res.json();
           setCourses((coursesInfo) => ({
             ...coursesInfo,
             courses: resData.courses.map((course) => {
@@ -65,12 +62,16 @@ const Courses = (props) => {
             }),
           }));
           setAttendedCourseId(resData.attendedCourseId);
-        })
-        .catch((err) => {
+          setIsAdded(false);
+        } catch(err) {
           console.log(err);
-        });
+        }
     }
-  }, [props.loginStatus.token, props.loginStatus.userRole, isAdded]);
+  }
+  , [props.loginStatus.token, props.loginStatus.userRole])
+
+  useEffect(() => loadCourses().finally(x => setIsLoaded(true))
+    , [props.loginStatus.token, props.loginStatus.userRole, isAdded, loadCourses, setIsLoaded]);
 
   const [showCreateCourseCart, setShowCreateCourseCart] = useState(false);
 
@@ -90,7 +91,7 @@ const Courses = (props) => {
     buttonContent = "Hide Course Creator";
   }
 
-  return (
+  return isLoaded ?
     <div>
       {props.loginStatus.userRole === "student" && !!attendedCourseId && (
         <div>
@@ -127,8 +128,7 @@ const Courses = (props) => {
             ))}
         </div>
       )}
-    </div>
-  );
+    </div> : <div className={classes.centered}> <Loader/> </div> 
 };
 
 export default Courses;

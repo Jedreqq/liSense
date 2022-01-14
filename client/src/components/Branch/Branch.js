@@ -38,7 +38,7 @@ const Branch = (props) => {
 
 
   return (
-    <article className={classes.singleBranch}>
+    <article className={(+props.id === +props.activeBranch) ? classes.singleBranchActive : classes.singleBranch}>
       <div>
         <header>
           <h2>
@@ -47,11 +47,11 @@ const Branch = (props) => {
           <p>{props.phoneNumber}</p>
         </header>
       </div>
-      {isOwner && (
+      {(isOwner && (+props.id !== +props.activeBranch)) ? (
         <Button onClick={(e) => props.onActiveBranchChange(e, props.id)}>
           Set as Active
         </Button>
-      )}
+      ) : <Button disabled>Active Branch</Button>}
       {isStudentOrInstructor && (
         <Button onClick={applyToBranchHandler}>
           Apply to School

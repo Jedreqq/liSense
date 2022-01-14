@@ -8,10 +8,15 @@
     text-transform: uppercase;
     text-decoration: none;
     display: block;
+    color: black;
   }
   
   .btn:focus {
     outline: none;
+  }
+
+  .btn:hover {
+    background-color: #00808027;
   }
   
   .btn:disabled {

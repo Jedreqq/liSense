@@ -70,6 +70,8 @@ router.post("/createCourse", verifyToken, isOwner, userController.createCourse);
 
 router.get('/courseList', verifyToken, isOwner, userController.getCourseList);
 
+router.post('/getStudentsOfCourse', verifyToken, userController.getStudentsOfCourse);
+
 router.get('/courses/:courseId', verifyToken, isOwner, userController.getSingleCourse);
 
 router.get('/memberCourses', verifyToken, isStudent, userController.getMemberCourses);
@@ -100,6 +102,20 @@ router.patch('/replyToApplierInstructorRequest', verifyToken, isInstructor, user
 router.post('/postNewComment', verifyToken,  userController.postNewComment);
 
 router.get('/instructorListForStudent/:instructorId', verifyToken, isStudent, userController.getSingleInstructorOfStudent);
+
+router.post('/sendMessage', verifyToken, userController.sendMessage);
+
+router.get('/messages', verifyToken, userController.getMessages);
+
+router.get('/messages/:messageId', verifyToken, userController.getSingleMessage);
+
+router.get('/notifications', verifyToken, userController.getNotifications);
+
+router.post('/createNewEvent', verifyToken, userController.createNewEvent);
+
+
+
+
 
 router.post('/addCategory', userController.addCategory);
 

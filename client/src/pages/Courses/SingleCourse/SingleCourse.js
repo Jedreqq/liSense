@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useParams } from "react-router-dom";
+import Loader from "../../../components/Loader/Loader";
 import Student from "../../../components/Student/Student";
 
 import classes from "./SingleCourse.module.css";
@@ -8,6 +9,7 @@ const SingleCourse = (props) => {
   const { courseId } = useParams();
 
   const [isChanged, setIsChanged] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
 
   const [courseData, setCourseData] = useState({
     name: "",
@@ -20,41 +22,41 @@ const SingleCourse = (props) => {
     instructorList: [],
   });
 
-  console.log(courseData.studentList);
-
-  useEffect(() => {
-    fetch("http://localhost:3001/courses/" + courseId, {
-      headers: {
-        Authorization: "Bearer " + props.loginStatus.token,
-      },
-    })
-      .then((res) => {
-        if (res.status !== 200) {
-          throw new Error("Failed to fetch status");
-        }
-        return res.json();
-      })
-      .then((resData) => {
-        setCourseData((courseInfo) => ({
-          ...courseInfo,
-          name: resData.course.name,
-          price: resData.course.price,
-          dayOfStart: resData.course.dayOfStart,
-          theoryClasses: resData.course.theoryClasses,
-          practicalClasses: resData.course.practicalClasses,
-          categories: resData.course.categories,
-          studentList: resData.students.map((student) => {
-            return {
-              ...student,
-            };
-          }),
-        }));
-        setIsChanged(false);
-      })
-      .catch((err) => {
-        console.log(err);
+  const loadSingleCourse = useCallback(async () => {
+    try {
+      const res = await fetch("http://localhost:3001/courses/" + courseId, {
+        headers: {
+          Authorization: "Bearer " + props.loginStatus.token,
+        },
       });
-  }, [props.loginStatus.token, courseId, isChanged]);
+      if (res.status !== 200) {
+        throw new Error("Failed to fetch status");
+      }
+      const resData = await res.json();
+
+      setCourseData((courseInfo) => ({
+        ...courseInfo,
+        name: resData.course.name,
+        price: resData.course.price,
+        dayOfStart: resData.course.dayOfStart,
+        theoryClasses: resData.course.theoryClasses,
+        practicalClasses: resData.course.practicalClasses,
+        categories: resData.course.categories,
+        studentList: resData.students.map((student) => {
+          return {
+            ...student,
+          };
+        }),
+      }));
+      setIsChanged(false);
+    } catch (err) {
+      console.log(err);
+    }
+  }, [courseId, props.loginStatus.token]);
+  useEffect(
+    () => loadSingleCourse().finally((x) => setIsLoaded(true)),
+    [props.loginStatus.token, courseId, isChanged, loadSingleCourse, setIsLoaded]
+  );
 
   courseData.studentList.map((student) =>
     student.payments.map((payment) => console.log(payment.status))
@@ -62,15 +64,15 @@ const SingleCourse = (props) => {
 
   const updateSingleCourse = (e, resData) => {
     e.preventDefault();
-    setIsChanged(prevState => !prevState);
-  }
+    setIsChanged((prevState) => !prevState);
+  };
   console.log(courseData);
 
-  return (
+  return isLoaded ? 
     <section>
       {courseData.name} {courseData.price}
-      THERE WILL BE SOME DATA (TO EDIT AND TO SEE)
-      THERE WILL BE A LINK TO A CALENDAR
+      THERE WILL BE SOME DATA (TO EDIT AND TO SEE) THERE WILL BE A LINK TO A
+      CALENDAR
       <div className={classes.usersDiv}>
         <h2>Students in Course</h2>
         {courseData.studentList.length === 0 && (
@@ -118,8 +120,10 @@ const SingleCourse = (props) => {
             )
           )}
       </div>
-    </section>
-  );
+    </section> : <div className={classes.centered}>
+      <Loader/>
+    </div>
+
 };
 
 export default SingleCourse;

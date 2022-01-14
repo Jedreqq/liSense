@@ -1,5 +1,6 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
+import openSocket, { io } from "socket.io-client";
 import "./App.css";
 //import Button from "./components/Button/Button";
 import Layout from "./components/Layout/Layout";
@@ -23,6 +24,11 @@ import SingleVehicle from "./pages/Fleet/SingleVehicle/SingleVehicle";
 import SingleInstructor from "./pages/Instructors/SingleInstructor/SingleInstructor";
 import SingleStudent from "./pages/Students/SingleStudent/SingleStudent";
 import InstructorDash from "./pages/Dashboard/InstructorDash/InstructorDash";
+import Mailbox from "./pages/Mailbox/Mailbox";
+import MessageBox from "./pages/Mailbox/MessageBox/MessageBox";
+import SingleMessage from "./pages/Mailbox/SingleMessage/SingleMessage";
+import Loader from "./components/Loader/Loader";
+import MessageContext from "./context/MessageContext";
 
 function App() {
   const [loginStatus, setLoginStatus] = useState({
@@ -32,11 +38,13 @@ function App() {
     userRole: null,
     userMail: null,
   });
+  const socket = useRef(undefined);
 
   const [activeBranch, setActiveBranch] = useState(null);
   const [memberId, setMemberId] = useState(null);
-
+  // const [notificationCount, setNotificationCount] = useState(0);
   const [isLoaded, setIsLoaded] = useState(false);
+  const onMessageReceived = useRef(() => {});
 
   const navigate = useNavigate();
 
@@ -54,6 +62,18 @@ function App() {
   }, [setLoginStatus, setActiveBranch, setMemberId]);
 
   const checkLoginStatus = useCallback(async () => {
+    // try {
+    //   const res = await fetch('http://localhost:3001/notifications', {
+    //     headers: {
+    //       Authorization: "Bearer " + loginStatus.token
+    //     }
+    //   });
+    //   const resData = await res.json();
+    //   console.log(resData);
+    //  setNotificationCount(resData.counter);
+    // } catch(err) {
+    //   console.log(err);
+    // }
     const token = localStorage.getItem("token");
     const expireDate = localStorage.getItem("expireDate");
     if (!token || !expireDate) {
@@ -87,6 +107,20 @@ function App() {
     () => checkLoginStatus().finally((x) => setIsLoaded(true)),
     [loginStatus.isAuth, checkLoginStatus, setIsLoaded]
   );
+
+  useEffect(() => {
+    isLoaded &&
+      loginStatus.isAuth &&
+      (() =>{
+        socket.current = io("http://localhost:3001", {
+          extraHeaders: { Authorization: "Bearer " + loginStatus.token },});
+        socket.current.on("sendMessage", (message) => {
+          onMessageReceived.current(message);
+        })})();
+    return () => {
+      socket.current && socket.current.disconnect();
+    };
+  }, [isLoaded, loginStatus.isAuth, loginStatus.token]);
 
   console.log(memberId);
 
@@ -189,6 +223,10 @@ function App() {
         const remainingTime = 60 * 60 * 1000;
         const expireDate = new Date(new Date().getTime() + remainingTime);
         localStorage.setItem("expireDate", expireDate.toISOString());
+        // openSocket("http://localhost:3001", {
+        //   extraHeaders: { Authorization: "Bearer " + resData.token },
+        // });
+        //  io('http://localhost:3001', {extraHeaders: {Authorization: "Bearer " + resData.token}})
       })
       .catch((err) => {
         console.log(err);
@@ -218,6 +256,18 @@ function App() {
       <Routes>
         <Route path="/school" element={<School loginStatus={loginStatus} />} />
         <Route
+          path="/mailbox"
+          element={<Mailbox loginStatus={loginStatus} />}
+        />
+        <Route
+          path="mailbox/write/:userId"
+          element={<MessageBox loginStatus={loginStatus} />}
+        />
+        <Route
+          path="mailbox/read/:messageId"
+          element={<SingleMessage loginStatus={loginStatus} />}
+        />
+        <Route
           path="/dashboard"
           element={
             <Dashboard loginStatus={loginStatus} onLogout={logoutHandler} />
@@ -228,6 +278,7 @@ function App() {
           path="/branches"
           element={
             <Branches
+              activeBranch={activeBranch}
               onActiveBranchChange={activeBranchHandler}
               loginStatus={loginStatus}
             />
@@ -322,6 +373,18 @@ function App() {
     routes = (
       <Routes>
         <Route
+          path="/mailbox"
+          element={<Mailbox loginStatus={loginStatus} />}
+        />
+        <Route
+          path="mailbox/write/:userId"
+          element={<MessageBox loginStatus={loginStatus} />}
+        />
+        <Route
+          path="mailbox/read/:messageId"
+          element={<SingleMessage loginStatus={loginStatus} />}
+        />
+        <Route
           path="/dashboard"
           exact
           element={
@@ -339,6 +402,18 @@ function App() {
   ) {
     routes = (
       <Routes>
+        <Route
+          path="/mailbox"
+          element={<Mailbox loginStatus={loginStatus} />}
+        />
+        <Route
+          path="mailbox/write/:userId"
+          element={<MessageBox loginStatus={loginStatus} />}
+        />
+        <Route
+          path="mailbox/read/:messageId"
+          element={<SingleMessage loginStatus={loginStatus} />}
+        />
         <Route
           path="/instructorDash"
           exact
@@ -376,6 +451,18 @@ function App() {
     routes = (
       <Routes>
         <Route
+          path="/mailbox"
+          element={<Mailbox loginStatus={loginStatus} />}
+        />
+        <Route
+          path="mailbox/write/:userId"
+          element={<MessageBox loginStatus={loginStatus} />}
+        />
+        <Route
+          path="mailbox/read/:messageId"
+          element={<SingleMessage loginStatus={loginStatus} />}
+        />
+        <Route
           path="/payment"
           exact
           element={<Payment loginStatus={loginStatus} />}
@@ -391,7 +478,7 @@ function App() {
             />
           }
         />
-                <Route
+        <Route
           path="/instructors/:instructorId"
           element={
             <SingleInstructor
@@ -424,15 +511,21 @@ function App() {
     );
   }
   return isLoaded ? (
-    <Layout
-      onLogout={logoutHandler}
-      loginStatus={loginStatus}
-      memberId={memberId}
-    >
-      {routes}
-    </Layout>
+    <MessageContext onMessageReceived={onMessageReceived} isAuth={loginStatus.isAuth} token={loginStatus.token}>
+      <Layout
+        // notificationCount={notificationCount}
+        onLogout={logoutHandler}
+        loginStatus={loginStatus}
+        memberId={memberId}
+      >
+        {routes}
+      </Layout>
+    </MessageContext>
   ) : (
-    <></>
+    <div className="centered">
+      {" "}
+      <Loader />{" "}
+    </div>
   );
 }
 

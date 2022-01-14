@@ -1,44 +1,51 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import Button from "../../../components/Button/Button";
 import ButtonLink from "../../../components/ButtonLink/ButtonLink";
+import Loader from "../../../components/Loader/Loader";
 import classes from "./StudentDash.module.css";
 
 const StudentDash = (props) => {
   const [attendedCourseId, setAttendedCourseId] = useState();
   const [paymentStatus, setPaymentStatus] = useState();
 
-  
-  useEffect(() => {
-    setAttendedCourseId();
-    setPaymentStatus();
-    fetch("http://localhost:3001/studentData", {
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  const loadStudentDash = useCallback(async() => {
+    try {
+
+      setAttendedCourseId();
+      setPaymentStatus();
+      const res = await fetch("http://localhost:3001/studentData", {
       headers: {
         Authorization: "Bearer " + props.loginStatus.token,
       },
     })
-      .then((res) => {
-        if (res.status !== 200) {
-          throw new Error("Failed to fetch courses.");
-        }
-        return res.json();
-      })
-      .then((resData) => {
-        setAttendedCourseId(resData.attendedCourseId);
-        setPaymentStatus(resData.status);
-      });
-
-      const query = new URLSearchParams(window.location.search);
-      if(query.get("success")) {
-        console.log('hehehehehe')
+      if (res.status !== 200) {
+        throw new Error("Failed to fetch courses.");
       }
-      if(query.get('canceled')) {
-        console.log('no i sie nie udalo');
-      }
+      const resData = await res.json();
+ 
+      setAttendedCourseId(resData.attendedCourseId);
+      setPaymentStatus(resData.status);
+    
+  } catch(err) {
+    console.log(err);
+  }
 
-  }, [props.loginStatus.token]);
+      // const query = new URLSearchParams(window.location.search);
+      // if(query.get("success")) {
+      //   console.log('hehehehehe')
+      // }
+      // if(query.get('canceled')) {
+      //   console.log('no i sie nie udalo');
+      // }
+
+  }, [props.loginStatus.token])
+
+  useEffect(() => loadStudentDash().finally(x => setIsLoaded(true)), [setIsLoaded, loadStudentDash, props.loginStatus.token]);
 
   
-  return (
+  return isLoaded ?
     <div>
       {paymentStatus === "unpaid" && (
         <div>
@@ -49,8 +56,9 @@ const StudentDash = (props) => {
         </div>
       )}
       {paymentStatus === "paid" && <div>What You want to do today?</div>}
+    </div> : <div className={classes.centered}>
+      <Loader />
     </div>
-  );
 };
 
 export default StudentDash;

@@ -4,6 +4,7 @@ const { validationResult } = require("express-validator");
 const jwt = require("jsonwebtoken");
 const Category = require("../models/category");
 const UserCategory = require("../models/user-category");
+const Mailbox = require("../models/mailbox");
 
 exports.signup = (req, res, next) => {
   const errors = validationResult(req);
@@ -27,6 +28,7 @@ exports.signup = (req, res, next) => {
     //     const categories = req.body.categories;
   }
   let user;
+  let mailbox;
 
   bcrypt
     .hash(password, 12)
@@ -44,6 +46,12 @@ exports.signup = (req, res, next) => {
       return user.save();
     })
     .then((result) => {
+      console.log(result);
+      mailbox = new Mailbox({
+        userId: user._id
+      });
+      return mailbox.save();
+    }).then(result => {
       if(role === 'instructor') {
         categories.forEach((category) => {
           Category.findAll({ where: { type: category } }).then((cats) => {
@@ -61,8 +69,7 @@ exports.signup = (req, res, next) => {
       res.status(201).json({
         message: `User with role ${role} created.`,
       });
-    })
-    .catch((err) => {
+    }).catch((err) => {
       if (!err.statusCode) {
         res.json({ message: err.message });
         res.json({ message: "Server is here man." });
@@ -91,6 +98,7 @@ exports.login = (req, res, next) => {
         error.statusCode = 401;
         throw error;
       }
+      //tutaj już poszlo i tworzy sie token zeby moc byc autoryzowanym na wszystkie strony zalogowanego
       const token = jwt.sign(
         {
           userId: loadedUser._id,

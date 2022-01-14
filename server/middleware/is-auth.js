@@ -38,6 +38,45 @@ verifyToken = (req, res, next) => {
   next();
 };
 
+verifyTokenSocket = (token) => {
+  const authHeader = token;
+  console.log(authHeader);
+  if (!authHeader) {
+    const error = new Error("Not authenticated.");
+    err.statusCode = 401;
+    throw error;
+  }
+  const splitToken = authHeader.split(" ")[1];
+  let decodedToken;
+  try {
+    decodedToken = jwt.verify(splitToken, "liSenseAppEngineerSecret");
+  } catch (err) {
+    err.statusCode = 500;
+    throw err;
+  }
+  if (!decodedToken) {
+    const error = new Error("Not authenticated.");
+    err.statusCode = 401;
+    throw error;
+  }
+  return {
+    userId: decodedToken.userId,
+    role: decodedToken.role,
+  };
+  // if(!token) {
+  //     return res.status(403).send({message: 'No token provided.'});
+  // }
+  // jwt.verify(token, 'liSenseAppEngineerSecret', (err, decodedToken) => {
+  //     if(err) {
+  //         return res.status(401).send({message: 'Not authorized.'});
+  //     }
+  //     req.userId = decodedToken.userId;
+  //     req.userRole = decodedToken.role;
+  // })
+  // req.userRole = decodedToken.role //I will use it for authorizing access, I know user id stored in token
+
+};
+
 isOwner = (req, res, next) => {
   User.findByPk(req.userId).then((user) => {
     if (user.role === "owner") {
@@ -93,7 +132,8 @@ const authJwt = {
   isOwner: isOwner,
   isInstructor: isInstructor,
   isStudent: isStudent,
-  isStudentOrInstructor: isStudentOrInstructor
+  isStudentOrInstructor: isStudentOrInstructor,
+  verifyTokenSocket: verifyTokenSocket
 };
 
 module.exports = authJwt;

@@ -1,0 +1,29 @@
+.messageBox {
+    background-color: rgb(234, 237, 241);
+    padding: 3rem;
+    position: relative;
+}
+
+.messageBox label {
+    display: block;
+    text-transform: uppercase;
+    margin-bottom: 0.25rem;
+}
+
+.textarea {
+    display: block;
+    font: inherit;
+    padding: 0.25rem;
+    width: 100%;
+    border-radius: 3px;
+    border: 1px solid #ccc;
+    resize: none;
+    height: 10rem;
+}
+
+.btnDiv {
+    margin-top: 0.2rem;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+}

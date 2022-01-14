@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Input from "../../components/Input/Input";
 import Button from "../../components/Button/Button";
 import classes from "./Dashboard.module.css";
 import Branch from "../../components/Branch/Branch";
+import Loader from "../../components/Loader/Loader";
 
 const Dashboard = (props) => {
   const [role, setRole] = useState("");
@@ -12,55 +13,76 @@ const Dashboard = (props) => {
   const [isMember, setIsMember] = useState(false);
   const [allBranches, setAllBranches] = useState([]);
   const navigate = useNavigate();
-  useEffect(() => {
-    fetch("http://localhost:3001/dashboard", {
-      headers: {
-        Authorization: "Bearer " + props.loginStatus.token,
-      },
-    })
-      .then((res) => {
-        if (res.status !== 200) {
-          throw new Error("Failed to fetch user status.");
-        }
-        return res.json();
-      })
-      .then((resData) => {
-        console.log(resData.branch);
-        setRole(resData.role);
-        setHasCreatedSchool(resData.hasSchool);
-        if (role === "owner" && hasCreatedSchool) {
-          navigate("/school");
-        }
-        if ((role === "student" || role === "instructor")) {
-          setIsMember(!!resData.memberId);
-        }
-        if (role === "student" && isMember) {
-          navigate("/studentDash")
-        }
-      });
 
-    fetch("http://localhost:3001/branchesList", {
-      headers: {
-        Authorization: "Bearer " + props.loginStatus.token,
-      },
-    })
-      .then((res) => {
-        if (res.status !== 200) {
-          throw new Error("Failed to fetch branches.");
-        }
-        return res.json();
-      })
-      .then((resData) => {
-        setAllBranches(
-          resData.branches.map((branch) => {
-            return {
-              ...branch,
-            };
-          })
-        );
-      })
-      .catch((err) => console.log(err));
-  }, [props.loginStatus.token, hasCreatedSchool, navigate, role, isMember]);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  const loadDashboard = useCallback(async () => {
+    try {
+      const res = await fetch("http://localhost:3001/dashboard", {
+        headers: {
+          Authorization: "Bearer " + props.loginStatus.token,
+        },
+      });
+      if (res.status !== 200) {
+        throw new Error("Failed to fetch user status.");
+      }
+      const resData = await res.json();
+      setRole(resData.role);
+      setHasCreatedSchool(resData.hasSchool);
+      if (role === "owner" && hasCreatedSchool) {
+        navigate("/school");
+      }
+      if (role === "student" || role === "instructor") {
+        setIsMember(!!resData.memberId);
+      }
+      if (role === "student" && isMember) {
+        navigate("/studentDash");
+      }
+    } catch (err) {
+      console.log(err);
+    }
+
+    if (
+      props.loginStatus.userRole === "student" ||
+      props.loginStatus.userRole === "instructor"
+    ) {
+      try {
+        const res = await fetch("http://localhost:3001/branchesList", {
+          headers: {
+            Authorization: "Bearer " + props.loginStatus.token,
+          },
+        })
+ 
+            if (res.status !== 200) {
+              throw new Error("Failed to fetch branches.");
+            }
+            const resData = await res.json();
+
+            setAllBranches(
+              resData.branches.map((branch) => {
+                return {
+                  ...branch,
+                };
+              })
+            );
+      } catch (err) {
+        console.log(err);
+      }
+    }
+  }, [hasCreatedSchool, isMember, navigate, role, props.loginStatus]);
+
+  useEffect(
+    () => loadDashboard().finally((x) => setIsLoaded(true)),
+    [
+      setIsLoaded,
+      loadDashboard,
+      props.loginStatus.token,
+      hasCreatedSchool,
+      navigate,
+      role,
+      isMember,
+    ]
+  );
 
   const createSchoolHandler = (e) => {
     e.preventDefault();
@@ -92,7 +114,7 @@ const Dashboard = (props) => {
 
   console.log(isMember);
 
-  return (
+  return isLoaded ?
     <div>
       <p>Hello there, authenticated man, are you a {role}? </p>
       {(isStudent || isInstructor) && !isMember && (
@@ -142,8 +164,9 @@ const Dashboard = (props) => {
           </form>
         </div>
       )}
+    </div> : <div className={classes.centered}>
+      <Loader />
     </div>
-  );
 };
 
 export default Dashboard;

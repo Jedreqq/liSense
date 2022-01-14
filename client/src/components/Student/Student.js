@@ -8,6 +8,8 @@ const Student = (props) => {
   let isOwner = props.loginStatus.userRole === "owner";
   let isInstructor = props.loginStatus.userRole === "instructor";
   let link = "/students/" + props.id;
+  let mailboxLink = "/mailbox/write/" + props.id;
+  
 
   const studentApplyHandler = (e, decision) => {
     console.log(decision + " " + props.id);
@@ -116,10 +118,12 @@ const Student = (props) => {
               </Button>
             </React.Fragment>
           )}
-          {isOwner && (
+          {(isOwner || isInstructor) && (
             <div className={classes.studentActions}>
               <ButtonLink link={link}>Details</ButtonLink>
+              <ButtonLink link={mailboxLink}>Send Message</ButtonLink>
             </div>
+            
           )}
           {props.paymentStatus === "unpaid" && isOwner && (
             <div className={classes.CourseActions}>

@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import Button from "../../../components/Button/Button";
 import Input from "../../../components/Input/Input";
+import Loader from "../../../components/Loader/Loader";
 
 import classes from "./SingleInstructor.module.css";
 
@@ -23,121 +24,128 @@ const SingleInstructor = (props) => {
     comments: [],
   });
 
+  const [isLoaded, setIsLoaded] = useState(false);
+
   const [assignedInstructorId, setAssignedInstructorId] = useState();
   const [newComment, setNewComment] = useState("");
-  useEffect(() => {
+
+  const loadSingleInstructor = useCallback(async () => {
     if (props.loginStatus.userRole === "owner") {
-      fetch("http://localhost:3001/instructorList/" + instructorId, {
-        headers: {
-          Authorization: "Bearer " + props.loginStatus.token,
-        },
-      })
-        .then((res) => {
-          if (res.status !== 200) {
-            throw new Error("Failed to fetch status");
+      try {
+        const res = await fetch(
+          "http://localhost:3001/instructorList/" + instructorId,
+          {
+            headers: {
+              Authorization: "Bearer " + props.loginStatus.token,
+            },
           }
-          return res.json();
-        })
-        .then((resData) => {
-          console.log(resData);
-          setInstructorData((instructorInfo) => ({
-            ...instructorInfo,
-            firstname: resData.instructor.firstname,
-            lastname: resData.instructor.lastname,
-            email: resData.instructor.email,
-            phoneNumber: resData.instructor.phoneNumber,
-            memberId: resData.instructor.memberId,
-            city: resData.instructor.city,
-            categories: resData.instructor.categories.map((category) => {
-              return {
-                ...category,
-              };
-            }),
-            comments: resData.comments.map((comment) => {
-              return {
-                ...comment,
-              };
-            }),
-          }));
-        })
-        .catch((err) => {
-          console.log(err);
-        });
+        );
+        if (res.status !== 200) {
+          throw new Error("Failed to fetch status");
+        }
+        const resData = await res.json();
+        setInstructorData((instructorInfo) => ({
+          ...instructorInfo,
+          firstname: resData.instructor.firstname,
+          lastname: resData.instructor.lastname,
+          email: resData.instructor.email,
+          phoneNumber: resData.instructor.phoneNumber,
+          memberId: resData.instructor.memberId,
+          city: resData.instructor.city,
+          categories: resData.instructor.categories.map((category) => {
+            return {
+              ...category,
+            };
+          }),
+          comments: resData.comments.map((comment) => {
+            return {
+              ...comment,
+            };
+          }),
+        }));
+      } catch (err) {
+        console.log(err);
+      }
     }
     if (props.loginStatus.userRole === "student") {
-      fetch("http://localhost:3001/instructorListForStudent/" + instructorId, {
+      try {
+        const res = await fetch(
+          "http://localhost:3001/instructorListForStudent/" + instructorId,
+          {
+            headers: {
+              Authorization: "Bearer " + props.loginStatus.token,
+            },
+          }
+        );
+        if (res.status !== 200) {
+          throw new Error("Failed to fetch status");
+        }
+        const resData = await res.json();
+        setAssignedInstructorId(resData.assignedInstructorId);
+        setInstructorData((instructorInfo) => ({
+          ...instructorInfo,
+          firstname: resData.instructor.firstname,
+          lastname: resData.instructor.lastname,
+          phoneNumber: resData.instructor.phoneNumber,
+          memberId: resData.instructor.memberId,
+          comments: resData.comments.map((comment) => {
+            return {
+              ...comment,
+            };
+          }),
+        }));
+      } catch (err) {
+        console.log(err);
+      }
+    }
+  }, [instructorId, props.loginStatus.token, props.loginStatus.userRole]);
+
+  useEffect(
+    () => loadSingleInstructor().finally((x) => setIsLoaded(true)),
+    [
+      loadSingleInstructor,
+      setIsLoaded,
+      props.loginStatus.token,
+      instructorId,
+      props.loginStatus.userRole,
+    ]
+  );
+
+  const addCommentHandler = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await fetch("http://localhost:3001/postNewComment", {
+        method: "POST",
         headers: {
           Authorization: "Bearer " + props.loginStatus.token,
+          "Content-Type": "application/json",
         },
-      })
-        .then((res) => {
-          if (res.status !== 200) {
-            throw new Error("Failed to fetch status");
-          }
-          return res.json();
-        })
-        .then((resData) => {
-          console.log(resData);
-          setAssignedInstructorId(resData.assignedInstructorId);
-          setInstructorData((instructorInfo) => ({
-            ...instructorInfo,
-            firstname: resData.instructor.firstname,
-            lastname: resData.instructor.lastname,
-            phoneNumber: resData.instructor.phoneNumber,
-            memberId: resData.instructor.memberId,
-            comments: resData.comments.map((comment) => {
-              return {
-                ...comment,
-              };
-            }),
-          }));
-        })
-        .catch((err) => {
-          console.log(err);
-        });
-    }
-  }, [props.loginStatus.token, instructorId, props.loginStatus.userRole]);
-
-  const addCommentHandler = (e) => {
-    e.preventDefault();
-    fetch("http://localhost:3001/postNewComment", {
-      method: "POST",
-      headers: {
-        Authorization: "Bearer " + props.loginStatus.token,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        text: newComment,
-        instructorId: instructorId,
-      }),
-    })
-      .then((res) => {
-        if (res.status === 422) {
-          throw new Error("Validation failed.");
-        }
-        if (res.status !== 200 && res.status !== 201) {
-          console.log("Error!");
-          throw new Error("Creating a comment failed!");
-        }
-        return res.json();
-      })
-      .then((resData) => {
-        const commentAdded = { content: newComment };
-        setInstructorData({
-          ...instructorData,
-          comments: [...instructorData.comments, commentAdded],
-        });
-        setNewComment("");
-        console.log(resData);
-      })
-      .catch((err) => {
-        console.log(err);
+        body: JSON.stringify({
+          text: newComment,
+          instructorId: instructorId,
+        }),
       });
+      if (res.status === 422) {
+        throw new Error("Validation failed.");
+      }
+      if (res.status !== 200 && res.status !== 201) {
+        console.log("Error!");
+        throw new Error("Creating a comment failed!");
+      }
+      const resData = await res.json();
+      const commentAdded = { content: newComment };
+      setInstructorData({
+        ...instructorData,
+        comments: [...instructorData.comments, commentAdded],
+      });
+      setNewComment("");
+      console.log(resData);
+    } catch (err) {
+      console.log(err);
+    }
   };
 
-  console.log(instructorData);
-
-  return (
+  return isLoaded ?
     <section>
       <div className={classes.instructorDiv}>
         <h3>
@@ -208,8 +216,9 @@ const SingleInstructor = (props) => {
           </div>
         </div>
       </div>
-    </section>
-  );
+    </section> : <div className={classes.centered}>
+      <Loader />
+    </div>
 };
 
 export default SingleInstructor;

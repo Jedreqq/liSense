@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import Loader from "../../components/Loader/Loader";
 import Vehicle from "../../components/Vehicle/Vehicle";
 import CreateVehicle from "./CreateVehicle";
 import classes from "./Fleet.module.css";
@@ -9,34 +10,39 @@ const Fleet = (props) => {
   });
 
   const [isAdded, setIsAdded] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
 
   const [showCreateVehicleCart, setShowCreateVehicleCart] = useState(false);
 
-  useEffect(() => {
-      fetch("http://localhost:3001/fleet", {
-          headers: {
-              Authorization: "Bearer " + props.loginStatus.token,
+  const loadVehicles = useCallback(async() => {
+    try {
+
+      const res = await fetch("http://localhost:3001/fleet", {
+        headers: {
+            Authorization: "Bearer " + props.loginStatus.token,
           }
-      }).then(res => {
+        })
         if (res.status !== 200) {
-            throw new Error("Failed to fetch vehicles.");
-          }
-          return res.json();
-      }).then(resData => {
-          console.log(resData.vehicles);
-          setVehicles(vehiclesInfo => ({
-              ...vehiclesInfo,
-              vehicles: resData.vehicles.map((vehicle) => {
-                  return {
-                      ...vehicle
-                  };
-              })
-          })); 
-      }).catch(err => {
-          console.log(err);
-      });
-      setIsAdded(false);
-  }, [props.loginStatus.token, isAdded])
+          throw new Error("Failed to fetch vehicles.");
+        }
+        const resData = await res.json();
+        
+        setVehicles(vehiclesInfo => ({
+          ...vehiclesInfo,
+          vehicles: resData.vehicles.map((vehicle) => {
+            return {
+              ...vehicle
+            };
+          })
+        })); 
+        setIsAdded(false);
+      } catch(err) {
+        console.log(err);
+      }
+    
+}, [props.loginStatus.token])
+
+  useEffect(() => loadVehicles().finally(x => setIsLoaded(true)), [loadVehicles, setIsLoaded, props.loginStatus.token, isAdded])
 
   const showCreateVehicleCartHandler = (e) => {
     e.preventDefault();
@@ -54,7 +60,7 @@ const Fleet = (props) => {
     buttonContent = "Hide Vehicle Creator";
   }
 
-  return (
+  return isLoaded ?
     <div>
       <div className={classes.vehiclesDiv}>
         <button onClick={showCreateVehicleCartHandler}>{buttonContent}</button>
@@ -77,8 +83,10 @@ const Fleet = (props) => {
             />
           ))}
       </div>
+    </div> : 
+    <div className={classes.centered}>
+      <Loader />
     </div>
-  );
 };
 
 export default Fleet;

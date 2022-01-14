@@ -73,6 +73,12 @@ const Instructor = (props) => {
 
   let link = "/instructors/" + props.id;
 
+  let mailboxLink = "/mailbox/write/" + props.id;
+  // let chat = `/chat/${props.id}_${props.loginStatus.userId}`
+  // if(+props.id > +props.loginStatus.userId) {
+  //   chat = `/chat/${props.loginStatus.userId}_${props.id}`
+  // }
+
   return (
     <article className={classes.singleInstructor}>
       <div>
@@ -113,7 +119,9 @@ const Instructor = (props) => {
           {(isOwner || isStudent) && (
             <div className={classes.instructorActions}>
               <ButtonLink link={link}>Details</ButtonLink>
+              <ButtonLink link={mailboxLink}>Send Message</ButtonLink>
             </div>
+            
           )}
         </header>
       </div>

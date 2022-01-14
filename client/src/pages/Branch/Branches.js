@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Branch from "../../components/Branch/Branch";
+import Loader from "../../components/Loader/Loader";
 import classes from "./Branches.module.css";
 import CreateBranch from "./CreateBranch";
 
@@ -10,42 +11,51 @@ const Branches = (props) => {
 
   const [showCreateBranchCart, setShowCreateBranchCart] = useState(false);
   const [isAdded, setIsAdded] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
 
-  useEffect(() => {
-    fetch("http://localhost:3001/ownerBranches", {
-      headers: {
-        Authorization: "Bearer " + props.loginStatus.token,
-      },
-    })
-      .then((res) => {
-        if (res.status !== 200) {
-          throw new Error("Failed to fetch branches.");
-        }
-        return res.json();
-      })
-      .then((resData) => {
-        setBranchesInfo((branchesInfo) => ({
-          ...branchesInfo,
-          branches: resData.branches.map((branch) => {
-            return {
-              ...branch,
-            };
-          }),
-        }));
-      })
-      .catch((err) => console.log(err));
+  const activeBranch = props.activeBranch;
+
+  const loadBranches = useCallback(async () => {
+    try {
+      const res = await fetch("http://localhost:3001/ownerBranches", {
+        headers: {
+          Authorization: "Bearer " + props.loginStatus.token,
+        },
+      });
+      if (res.status !== 200) {
+        throw new Error("Failed to fetch branches.");
+      }
+      const resData = await res.json();
+
+      setBranchesInfo((branchesInfo) => ({
+        ...branchesInfo,
+        branches: resData.branches.map((branch) => {
+          return {
+            ...branch,
+          };
+        }),
+      }));
+
       setIsAdded(false);
-  }, [props.loginStatus.token, isAdded]);
+    } catch (err) {
+      console.log(err);
+    }
+  }, [props.loginStatus.token]);
+
+  useEffect(
+    () => loadBranches().finally((x) => setIsLoaded(true)),
+    [loadBranches, setIsLoaded, props.loginStatus.token, isAdded]
+  );
 
   const showCreateBranchCartHandler = (e) => {
     e.preventDefault();
     setShowCreateBranchCart((prevState) => !prevState);
   };
-  
+
   const updateBranches = (e, resData) => {
     e.preventDefault();
     setIsAdded(true);
-  }
+  };
 
   let buttonContent = "Show Branch Creator";
 
@@ -53,10 +63,15 @@ const Branches = (props) => {
     buttonContent = "Hide Branch Creator";
   }
 
-  return (
+  return isLoaded ?
     <div className={classes.branchDiv}>
       <button onClick={showCreateBranchCartHandler}>{buttonContent}</button>
-      {showCreateBranchCart && <CreateBranch onCreateBranch={updateBranches} loginStatus={props.loginStatus} />}
+      {showCreateBranchCart && (
+        <CreateBranch
+          onCreateBranch={updateBranches}
+          loginStatus={props.loginStatus}
+        />
+      )}
       {branchesInfo.branches.length === 0 && (
         <div>
           <p>No branches found.</p>
@@ -66,6 +81,7 @@ const Branches = (props) => {
       {branchesInfo.branches.length > 0 &&
         branchesInfo.branches.map((branch) => (
           <Branch
+            activeBranch={activeBranch}
             loginStatus={props.loginStatus}
             onActiveBranchChange={(e) =>
               props.onActiveBranchChange(e, branch._id)
@@ -80,7 +96,7 @@ const Branches = (props) => {
           />
         ))}
     </div>
-  );
+  : <div className={classes.centered}> <Loader /> </div>
 };
 
 export default Branches;

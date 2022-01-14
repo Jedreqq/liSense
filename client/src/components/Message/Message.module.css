@@ -1,0 +1,36 @@
+.messageSection {
+    padding: 10px;
+    background-color: rgba(133, 142, 145, 0.068);
+    border-radius: 5px;
+  }
+
+  /* .commentsList {
+    height: auto;
+    padding: 5px;
+  } */
+
+  .message {
+    width: 80%;
+    height: auto;
+    padding: 10px;
+    background-color:  rgba(78, 94, 100, 0.068);;
+    border: 1px solid lightblue;
+    border-radius: 5px;
+    margin-top: 20px;
+    color: black;
+    text-decoration: none;
+    font-weight: bold;
+  }
+
+  .readMessage {
+    width: 80%;
+    height: auto;
+    padding: 10px;
+    background-color:  rgba(78, 94, 100, 0.068);;
+    border: 1px solid lightblue;
+    border-radius: 5px;
+    margin-top: 20px;
+    color: black;
+    text-decoration: none;
+    font-weight: normal;
+  }

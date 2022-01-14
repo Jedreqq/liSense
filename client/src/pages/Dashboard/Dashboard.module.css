@@ -25,3 +25,9 @@ div:last-child button {
   background-color: rgba(207, 213, 216, 0.062);
 }
 
+.centered {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
