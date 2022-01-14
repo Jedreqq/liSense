@@ -110,9 +110,7 @@ exports.getSchool = (req, res, next) => {
     })
     .catch((err) => {
       if (!err.statusCode) {
-        err.statusCode = 500;
-        console.log(err);
-      }
+        err.statusCode = 500;      }
       next(err);
     });
 };
@@ -892,7 +890,10 @@ exports.retrieveStripeObj = async (req, res, next) => {
       res.status(200).json({ result: result });
     }
   } catch (err) {
-    console.log(err);
+    if (!err.statusCode) {
+      err.statusCode = 500;
+    }
+    next(err);
   }
 };
 
