@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 
-import { Calendar, dateFnsLocalizer } from "react-big-calendar";
+import { Calendar, dateFnsLocalizer, momentLocalizer } from "react-big-calendar";
 import format from "date-fns/format";
 import parse from "date-fns/parse";
 import startOfWeek from "date-fns/startOfWeek";
@@ -14,6 +14,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import EventComponent from "./EventComponent";
 import { styled, Box } from "@mui/system";
 import ModalUnstyled from "@mui/base/ModalUnstyled";
+import moment from 'moment'
 
 import classes from './Schedule.module.css';
 
@@ -88,17 +89,19 @@ const dummy_data = [
   },
 ];
 
-const locales = {
-  "en-US": require("date-fns/locale/en-US"),
-};
-const localizer = dateFnsLocalizer({
-  format,
-  parse,
-  startOfWeek,
-  getDay,
-  getHours,
-  locales,
-});
+// const locales = {
+//   "en-US": require("date-fns/locale/en-US"),
+// };
+// const localizer = dateFnsLocalizer({
+//   format,
+//   parse,
+//   startOfWeek,
+//   getDay,
+//   getHours,
+//   locales,
+// });
+
+const localizer = momentLocalizer(moment);
 
 const Schedule = (props) => {
   const [isOpened, setIsOpened] = useState(false);
@@ -114,9 +117,11 @@ const Schedule = (props) => {
   //if owner i wybiore available course to fetch szukanie studentow w tym kursie do listy
   const [selectedCourse, setSelectedCourse] = useState(undefined);
   const [availableCourses, setAvailableCourses] = useState([]);
+  const [availableInstructors, setAvailableInstructors] = useState([]);
   const [studentsOfCourse, setStudentsOfCourse] = useState([]);
 
-  const [allEvents, setAllEvents] = useState(dummy_data);
+  const [allEvents, setAllEvents] = useState([]);
+  const [allStudentEvents, setAllStudentEvents] = useState([]);
   const [isChanged, setIsChanged] = useState(false);
 
   const setSelectedCourseHandler = (e) => {
@@ -169,7 +174,7 @@ const Schedule = (props) => {
       },
       body: JSON.stringify({
         title: newEvent.title,
-        _id: newEvent.user,
+        _id: newEvent.title === 'Theory Class (Course)' ? selectedCourse : newEvent.user,
         startDate: newEvent.start,
         endDate: newEvent.end,
         description: newEvent.description,
@@ -182,6 +187,42 @@ const Schedule = (props) => {
    }
    setIsChanged(true);
   };
+
+  const loadStudentEvents = useCallback(async() => {
+    if(props.loginStatus.userRole === 'student') {
+      try {
+        const res = await fetch("http://localhost:3001/getStudentCalendar", {
+          headers: {
+            Authorization: "Bearer " + props.loginStatus.token,
+          },
+        });
+        if (res.status !== 200) {
+          throw new Error("Failed to fetch courses.");
+        }
+
+        const resData = await res.json();
+        setAllStudentEvents(
+          resData.eventList.map((event) => {
+            return {
+              ...event,
+            };
+          })
+        );
+
+        setAllEvents(resData.eventList.map(event => ({
+          title: event.title,
+          start: moment(event.startDate).toDate(),
+          end: moment(event.endDate).toDate(),
+          status: event.status,
+          description: event.description
+        })))
+      } catch(err) {
+        console.log(err);
+      }
+    }
+  }, [props.loginStatus.token, props.loginStatus.userRole])
+
+
 
   const loadCourses = useCallback(async () => {
     if (props.loginStatus.userRole === "owner") {
@@ -196,7 +237,6 @@ const Schedule = (props) => {
         }
 
         const resData = await res.json();
-        setIsChanged(false);
         setAvailableCourses(
           resData.courses.map((course) => {
             return {
@@ -204,17 +244,36 @@ const Schedule = (props) => {
             };
           })
         );
+
+        const resInstructors = await fetch("http://localhost:3001/getInstructorsForSchedule", {
+          headers: {
+            Authorization: "Bearer " + props.loginStatus.token
+          }
+        })
+        if (res.status !== 200) {
+          throw new Error("Failed to fetch instructors.");
+        }
+
+        const resDataInstructors = await resInstructors.json();
+        setAvailableInstructors(resDataInstructors.instructors.map(instructor => {
+          return {
+            ...instructor
+          }
+        }))
+        setIsChanged(false);
       } catch (err) {
         console.log(err);
       }
     }
   }, [props.loginStatus.userRole, props.loginStatus.token]);
 
-  useEffect(() => loadCourses(), [loadCourses]);
+  useEffect(() => loadCourses().then(x => loadStudentEvents()), [loadCourses, loadStudentEvents]);
   console.log(newEvent.title);
   console.log(availableCourses);
   console.log("selected course:", selectedCourse);
   console.log("students of course", studentsOfCourse);
+  console.log("TEST NEW EVENT RESET USER", newEvent);
+  console.log(allStudentEvents);
 
 
   return (
@@ -242,7 +301,21 @@ const Schedule = (props) => {
               >
                 {eventOptions}
               </select>
-              {newEvent.title === "Practical Class" && (
+              {(newEvent.title === 'Individual (Instructor)') && (
+                <select selected="selected" value={newEvent.user === undefined ? "" : newEvent.user}  name="instructor"
+                id="instructor"  onChange={(e) => {
+                  setNewEvent({ ...newEvent, user: e.target.value });
+                }}>
+                  {availableInstructors.map(instructor => {
+                    return (
+                      <option key={instructor._id} value={instructor._id}>
+                      {instructor.firstname} {instructor.lastname}
+                    </option>
+                    )
+                  })}
+                </select>
+              )}
+              {(newEvent.title === "Practical Class" || newEvent.title === 'Internal Exam' || newEvent.title === "Theory Class (Course)") && (
                 <select
                   selected="selected"
                   value={selectedCourse === undefined ? "" : selectedCourse._id}
@@ -259,7 +332,7 @@ const Schedule = (props) => {
                   })}
                 </select>
               )}
-              {selectedCourse !== undefined && (
+              {selectedCourse !== undefined && (newEvent.title === "Practical Class" || newEvent.title === 'Internal Exam') && (
                 <select
                   value={newEvent.user === undefined ? "" : newEvent.user}
                   selected="selected"

@@ -113,7 +113,10 @@ router.get('/notifications', verifyToken, userController.getNotifications);
 
 router.post('/createNewEvent', verifyToken, userController.createNewEvent);
 
+router.get('/getInstructorsForSchedule', verifyToken, userController.getInstructorsForSchedule)
 
+///calendar get
+router.get('/getStudentCalendar', verifyToken, isStudent, userController.getStudentCalendar);
 
 
 

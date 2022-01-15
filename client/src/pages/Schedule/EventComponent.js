@@ -51,24 +51,24 @@ const EventComponent = ({ event }) => {
   return (
     <React.Fragment>
       <div onClick={handleOpen}>
-        {event.status === "Not completed" && (
+        {event.status === false && (
           <div style={{ backgroundColor: "red", padding: 2, borderRadius: 2 }}>
             <span>{event.title}</span>
-            {event.users.map((user) => {
+            {/* {event.users.map((user) => {
               return <p style={{ borderTop: 0, margin: 0 }}>{user + "\n"}</p>;
-            })}
+            })} */}
           </div>
         )}
-        {event.status === "Completed" && (
+        {event.status === true && (
           <div
             style={{ backgroundColor: "green", padding: 2, borderRadius: 2 }}
           >
             <span>{event.title}</span>
-            <p>
+            {/* <p>
               {event.users.map((user) => {
                 return user;
-              })}
-            </p>
+              })} */}
+            {/* </p> */}
           </div>
         )}
       </div>
@@ -82,9 +82,9 @@ const EventComponent = ({ event }) => {
         <Box sx={style}>
           <div style={{backgroundColor: 'white'}}>
             Details: {event.status}{" "}
-            {event.users.map((user) => {
+            {/* {event.users.map((user) => {
               return user;
-            })}
+            })} */}
           </div>
         </Box>
       </StyledModal>

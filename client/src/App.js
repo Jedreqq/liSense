@@ -62,18 +62,6 @@ function App() {
   }, [setLoginStatus, setActiveBranch, setMemberId]);
 
   const checkLoginStatus = useCallback(async () => {
-    // try {
-    //   const res = await fetch('http://localhost:3001/notifications', {
-    //     headers: {
-    //       Authorization: "Bearer " + loginStatus.token
-    //     }
-    //   });
-    //   const resData = await res.json();
-    //   console.log(resData);
-    //  setNotificationCount(resData.counter);
-    // } catch(err) {
-    //   console.log(err);
-    // }
     const token = localStorage.getItem("token");
     const expireDate = localStorage.getItem("expireDate");
     if (!token || !expireDate) {
@@ -111,12 +99,14 @@ function App() {
   useEffect(() => {
     isLoaded &&
       loginStatus.isAuth &&
-      (() =>{
+      (() => {
         socket.current = io("http://localhost:3001", {
-          extraHeaders: { Authorization: "Bearer " + loginStatus.token },});
+          extraHeaders: { Authorization: "Bearer " + loginStatus.token },
+        });
         socket.current.on("sendMessage", (message) => {
           onMessageReceived.current(message);
-        })})();
+        });
+      })();
     return () => {
       socket.current && socket.current.disconnect();
     };
@@ -489,6 +479,12 @@ function App() {
           }
         />
         <Route
+          path="/schedule"
+          element={
+            <Schedule loginStatus={loginStatus} activeBranch={activeBranch} />
+          }
+        />
+        <Route
           path="/courses"
           exact
           element={
@@ -511,7 +507,11 @@ function App() {
     );
   }
   return isLoaded ? (
-    <MessageContext onMessageReceived={onMessageReceived} isAuth={loginStatus.isAuth} token={loginStatus.token}>
+    <MessageContext
+      onMessageReceived={onMessageReceived}
+      isAuth={loginStatus.isAuth}
+      token={loginStatus.token}
+    >
       <Layout
         // notificationCount={notificationCount}
         onLogout={logoutHandler}
