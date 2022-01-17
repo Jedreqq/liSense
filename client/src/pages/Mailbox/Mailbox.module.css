@@ -12,3 +12,29 @@
     left: 50%;
     transform: translate(-50%, -50%);
 }
+
+.pagination {
+    width: 80%;
+    height: 40px;
+    list-style: none;
+    display: flex;
+    justify-content: center;
+}
+
+.pagination a {
+    padding: 10px;
+    margin: 8px;
+    border-radius: 5px;
+    border: 1px solid darkblue;
+    cursor: pointer;
+}
+
+.pagination a:hover {
+    color: white;
+    background-color: darkblue;
+}
+
+.activePagination a {
+    color: white;
+    background-color: darkblue;
+}

@@ -1,0 +1,11 @@
+.EventComponent {
+    background-color: red;
+    padding: 2px;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.dateTime {
+    display: block;
+    margin-top: -15px;
+}

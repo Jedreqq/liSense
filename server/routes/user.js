@@ -118,6 +118,15 @@ router.get('/getInstructorsForSchedule', verifyToken, userController.getInstruct
 ///calendar get
 router.get('/getStudentCalendar', verifyToken, isStudent, userController.getStudentCalendar);
 
+// router.get('/getInstructorCalendar', verifyToken, isInstructor, userController.getInstructorCalendar);
+
+router.post('/getStudentCalendarForInstructor', verifyToken, userController.getStudentCalendarForInstructor)
+
+router.post('/changeEventStatus', verifyToken, userController.changeEventStatus);
+
+router.patch('/deleteEvent', verifyToken, userController.deleteEvent);
+
+router.post('/getStudentListOfSelectedInstructor', verifyToken, isOwner, userController.getStudentListOfSelectedInstructor);
 
 
 router.post('/addCategory', userController.addCategory);

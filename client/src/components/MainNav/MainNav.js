@@ -14,7 +14,8 @@ const MainNav = (props) => {
   let isStudent = props.loginStatus.userRole === "student";
   let isInstructor = props.loginStatus.userRole === "instructor";
   let isMember = props.isMember;
-  const {messages, notificationCount, setNotificationCount} = useContext(messageContext);
+  const { messages, notificationCount, setNotificationCount } =
+    useContext(messageContext);
 
   const countNotification = useCallback(() => {
     let counter = 0;
@@ -26,27 +27,10 @@ const MainNav = (props) => {
     return counter;
   }, [messages]);
 
-  useEffect(() => setNotificationCount(countNotification()), [setNotificationCount, countNotification])
-
-  // const [isLoaded, setIsLoaded] = useState(false);
-  // const [notificationCount, setNotificationCount] = useState(0);
-
-  // const loadNav = useCallback(async() => {
-  //   try {
-  //     const res = await fetch('http://localhost:3001/notifications', {
-  //       headers: {
-  //         Authorization: "Bearer " + props.loginStatus.token
-  //       }
-  //     });
-  //     const resData = await res.json();
-  //     console.log(resData);
-  //    setNotificationCount(resData.counter);
-  //   } catch(err) {
-  //     console.log(err);
-  //   }
-  // }, [props.loginStatus.token])
-  
-  // useEffect(() => loadNav().finally(x => setIsLoaded(true)), [loadNav, setIsLoaded])
+  useEffect(
+    () => setNotificationCount(countNotification()),
+    [setNotificationCount, countNotification]
+  );
 
   return (
     <header className={classes.header}>
@@ -157,9 +141,9 @@ const MainNav = (props) => {
                   navData.isActive ? classes.active : ""
                 }
               >
-                Mailbox ({notificationCount === undefined ?  ' ' : notificationCount})
+                Mailbox (
+                {notificationCount === undefined ? " " : notificationCount})
               </NavLink>
-              
             </li>
             <li>
               <button onClick={props.onLogout}>Logout</button>
@@ -168,6 +152,16 @@ const MainNav = (props) => {
         )}
         {isAuth && isStudent && isMember && (
           <ul>
+            <li>
+              <NavLink
+                to="/schedule"
+                className={(navData) =>
+                  navData.isActive ? classes.active : ""
+                }
+              >
+                Schedule
+              </NavLink>
+            </li>
             <li>
               <NavLink
                 to="/instructors"
@@ -195,7 +189,8 @@ const MainNav = (props) => {
                   navData.isActive ? classes.active : ""
                 }
               >
-                Mailbox ({notificationCount === undefined ?  ' ' : notificationCount})
+                Mailbox (
+                {notificationCount === undefined ? " " : notificationCount})
               </NavLink>
             </li>
           </ul>
@@ -236,7 +231,8 @@ const MainNav = (props) => {
                   navData.isActive ? classes.active : ""
                 }
               >
-                Mailbox ({notificationCount === undefined ?  ' ' : notificationCount})
+                Mailbox (
+                {notificationCount === undefined ? " " : notificationCount})
               </NavLink>
             </li>
           </ul>

@@ -20,7 +20,7 @@ const Message = (props) => {
       </td>
       <td>
 
-      <ButtonLink link={`/mailbox/read/${props.id}`}>Open</ButtonLink>
+      <ButtonLink  link={`/mailbox/read/${props.id}`}>Open</ButtonLink>
       </td>
     </tr>
   );

@@ -22,6 +22,10 @@ const Course = (props) => {
         name: props.name,
         price: props.price
       })
+    }).then(res => {
+      window.location.reload()
+    }).catch(err => {
+      console.log(err);
     });
   };
   let link = "/courses/" + props.id;

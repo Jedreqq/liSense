@@ -57,17 +57,20 @@ function App() {
     localStorage.removeItem("activeBranch");
     localStorage.removeItem("memberId");
     localStorage.removeItem("userMail");
-    setActiveBranch(null);
-    setMemberId(null);
-  }, [setLoginStatus, setActiveBranch, setMemberId]);
+    setActiveBranch(undefined);
+    setMemberId(undefined);
+    window.location.replace("/login");
+  }, []);
 
   const checkLoginStatus = useCallback(async () => {
+    console.log("checkLoginStatusRerender");
     const token = localStorage.getItem("token");
     const expireDate = localStorage.getItem("expireDate");
     if (!token || !expireDate) {
       return;
     }
     if (new Date(expireDate) <= new Date()) {
+      console.log("logout");
       logoutHandler();
       return;
     }
@@ -75,7 +78,13 @@ function App() {
     const userMail = localStorage.getItem("userMail");
     const userRole = localStorage.getItem("userRole");
     const activeBranch = localStorage.getItem("activeBranch");
-    const memberId = localStorage.getItem("memberId");
+    let memberId = null;
+    if (localStorage.getItem("memberId") !== null) {
+      memberId = localStorage.getItem("memberId");
+    } else {
+      localStorage.removeItem("memberId");
+    }
+
     // const remainingTime = new Date(expireDate).getTime() - new Date().getTime();
     setLoginStatus((loginStatus) => ({
       ...loginStatus,
@@ -89,11 +98,11 @@ function App() {
       setActiveBranch(activeBranch);
     }
     setMemberId(memberId);
-  }, [logoutHandler, setLoginStatus, setActiveBranch]);
+  }, [logoutHandler]);
 
   useEffect(
     () => checkLoginStatus().finally((x) => setIsLoaded(true)),
-    [loginStatus.isAuth, checkLoginStatus, setIsLoaded]
+    [checkLoginStatus, window.location.pathname]
   );
 
   useEffect(() => {
@@ -208,9 +217,12 @@ function App() {
         localStorage.setItem("token", resData.token);
         localStorage.setItem("userId", resData.userId);
         localStorage.setItem("userRole", resData.role);
-        localStorage.setItem("memberId", resData.memberId);
+        if (resData.memberId !== null) {
+          localStorage.setItem("memberId", resData.memberId);
+        }
         localStorage.setItem("userMail", resData.email);
         const remainingTime = 60 * 60 * 1000;
+        // const remainingTime = 1000 * 15;
         const expireDate = new Date(new Date().getTime() + remainingTime);
         localStorage.setItem("expireDate", expireDate.toISOString());
         // openSocket("http://localhost:3001", {
@@ -419,6 +431,16 @@ function App() {
           exact
           element={
             <Students loginStatus={loginStatus} onLogout={logoutHandler} />
+          }
+        />
+        <Route
+          path="/students/:studentId"
+          element={
+            <SingleStudent
+              loginStatus={loginStatus}
+              activeBranch={activeBranch}
+              memberId={memberId}
+            />
           }
         />
         <Route

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import Button from "../../../components/Button/Button";
+import ButtonLink from "../../../components/ButtonLink/ButtonLink";
 import Input from "../../../components/Input/Input";
 import Loader from "../../../components/Loader/Loader";
 
@@ -145,6 +146,8 @@ const SingleInstructor = (props) => {
     }
   };
 
+  let mailboxLink = "/mailbox/write/" + instructorId;
+
   return isLoaded ?
     <section>
       <div className={classes.instructorDiv}>
@@ -177,6 +180,7 @@ const SingleInstructor = (props) => {
         ) : (
           <></>
         )}
+        <div><ButtonLink link={mailboxLink}>Send Message</ButtonLink></div>
         <div className={classes.commentsSection}>
           <h4>Comments Section</h4>
           {isStudent && +assignedInstructorId === +instructorId && (

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useParams } from "react-router-dom";
+import ButtonLink from "../../../components/ButtonLink/ButtonLink";
 import Loader from "../../../components/Loader/Loader";
 
 import classes from "./SingleStudent.module.css";
@@ -102,7 +103,7 @@ const SingleStudent = (props) => {
     }
   };
 
-  console.log(studentData);
+  let mailboxLink = "/mailbox/write/" + studentId;
 
   return isLoaded ? (
     <section>
@@ -151,6 +152,7 @@ const SingleStudent = (props) => {
               </p>
             </React.Fragment>
           )}
+          <div><ButtonLink link={mailboxLink}>Send Message</ButtonLink></div>
       </div>
     </section>
   ) : (

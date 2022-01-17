@@ -5,15 +5,17 @@ import classes from "./Branch.module.css";
 const Branch = (props) => {
   let isOwner = props.loginStatus.userRole === "owner" ? true : false;
   let isStudentOrInstructor =
-    (props.loginStatus.userRole === "student" || props.loginStatus.userRole === "instructor") ? true : false;
-
+    props.loginStatus.userRole === "student" ||
+    props.loginStatus.userRole === "instructor"
+      ? true
+      : false;
 
   const applyToBranchHandler = (e) => {
     e.preventDefault();
     fetch("http://localhost:3001/applyToBranch", {
       method: "PATCH",
       headers: {
-        'Content-Type': "application/json",
+        "Content-Type": "application/json",
         Authorization: "Bearer " + props.loginStatus.token,
       },
       body: JSON.stringify({
@@ -32,13 +34,20 @@ const Branch = (props) => {
       })
       .then((resData) => {
         console.log(resData);
+        props.onBranchRequestIdChange(e, props.id);
       })
       .catch((err) => console.log(err));
   };
 
-
   return (
-    <article className={(+props.id === +props.activeBranch) ? classes.singleBranchActive : classes.singleBranch}>
+    <article
+      className={
+       ( props.loginStatus.userRole === "owner" &&
+        (+props.id === +props.activeBranch
+          ? classes.singleBranchActive
+          : classes.singleBranch)) || ((props.loginStatus.userRole === "instructor" || props.loginStatus.userRole === 'student') && (+props.id === +props.BranchRequestId ? classes.singleBranchActive : classes.singleBranch))
+      }
+    >
       <div>
         <header>
           <h2>
@@ -47,15 +56,20 @@ const Branch = (props) => {
           <p>{props.phoneNumber}</p>
         </header>
       </div>
-      {(isOwner && (+props.id !== +props.activeBranch)) ? (
+      {isOwner && +props.id !== +props.activeBranch && (
         <Button onClick={(e) => props.onActiveBranchChange(e, props.id)}>
           Set as Active
         </Button>
-      ) : <Button disabled>Active Branch</Button>}
-      {isStudentOrInstructor && (
-        <Button onClick={applyToBranchHandler}>
-          Apply to School
-        </Button>
+      )}
+      {isOwner && +props.id === +props.activeBranch && (
+        <Button disabled>Active Branch</Button>
+      )}
+
+      {isStudentOrInstructor && +props.id !== +props.BranchRequestId && (
+        <Button onClick={applyToBranchHandler}>Apply to School</Button>
+      )}
+      {isStudentOrInstructor && +props.id === +props.BranchRequestId && (
+        <Button disabled>Currently applied</Button>
       )}
     </article>
   );

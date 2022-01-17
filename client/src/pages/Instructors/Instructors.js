@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import ButtonLink from "../../components/ButtonLink/ButtonLink";
 import Instructor from "../../components/Instructor/Instructor";
 import Loader from "../../components/Loader/Loader";
 import classes from "./Instructors.module.css";
@@ -6,11 +7,12 @@ import classes from "./Instructors.module.css";
 const Instructors = (props) => {
   const [appliers, setAppliers] = useState([]);
   const [instructors, setInstructors] = useState([]);
-  let memberId = props.memberId;
-  let isMember = !!props.memberId;
   const [isLoaded, setIsLoaded] = useState(false);
+  let isMember = !!props.memberId;
 
-  const [paymentStatus, setPaymentStatus] = useState("");
+  const [paymentStatus, setPaymentStatus] = useState(undefined);
+  const [assignedInstructorId, setAssignedInstructorId] = useState(undefined)
+  const [instructorRequestId, setInstructorRequestId] = useState(undefined);
   const [isChanged, setIsChanged] = useState(false);
 
   const loadInstructors = useCallback(async () => {
@@ -37,6 +39,8 @@ const Instructors = (props) => {
           })
         );
         setPaymentStatus(resData.userPaymentStatus[0]);
+        setAssignedInstructorId(resData.userAssignedInstructorId);
+        setInstructorRequestId(resData.instructorRequestId);
         setIsChanged(false);
       } catch (err) {
         console.log(err);
@@ -85,15 +89,25 @@ const Instructors = (props) => {
     setIsChanged(true);
   };
 
+  const onRequestedInstructorIdChange = (e, id) => {
+    e.preventDefault();
+    setInstructorRequestId(id);
+  }
+
+  let instructorLink = '/instructors/' + assignedInstructorId
+
   return isLoaded ? (
     <div>
-      {isMember && (
+      {isMember && !!assignedInstructorId && <h2>You are already assigned to the <ButtonLink link={instructorLink}>Instructor</ButtonLink> </h2>}
+      {isMember && !assignedInstructorId && (
         <div className={classes.instructorsDiv}>
           <h2>Instructors List</h2>
           {instructors.length === 0 && <p>No instructors in branch.</p>}
           {instructors.length > 0 &&
             instructors.map((instructor) => (
               <Instructor
+              onRequestedInstructorIdChange={onRequestedInstructorIdChange}
+                instructorRequestId={instructorRequestId}
                 paymentStatus={paymentStatus}
                 curVehicle={instructor.vehicle}
                 loginStatus={props.loginStatus}

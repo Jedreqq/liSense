@@ -7,9 +7,9 @@ const Instructor = (props) => {
   let isStudent = props.loginStatus.userRole === "student";
   let isMember = props.isMember;
   let isOwner = props.loginStatus.userRole === "owner";
-  let isPaid = props.paymentStatus === 'paid';
+  let isPaid = props.paymentStatus === "paid";
   const vehicle = props.curVehicle;
-  console.log(vehicle)
+  console.log(vehicle);
 
   const instructorApplyHandler = (e, decision) => {
     e.preventDefault();
@@ -66,7 +66,8 @@ const Instructor = (props) => {
       })
       .then((resData) => {
         console.log(resData);
-        props.onDecision(e, resData);
+        props.onRequestedInstructorIdChange(e, props.id);
+        //  props.onDecision(e, resData);
       })
       .catch((err) => console.log(err));
   };
@@ -80,15 +81,31 @@ const Instructor = (props) => {
   // }
 
   return (
-    <article className={classes.singleInstructor}>
+    <article
+      className={
+        +props.id === +props.instructorRequestId
+          ? classes.singleInstructorActive
+          : classes.singleInstructor
+      }
+    >
       <div>
         <header>
-          <h2>{` ${props.firstname} ${props.lastname}
-          (${props.curVehicle ? `${props.curVehicle.brand} ${props.curVehicle.model}` : 'Currently unassigned.'}`})</h2>
-          {isStudent && isPaid && (
+          <h2>
+            {` ${props.firstname} ${props.lastname}
+          (${
+            props.curVehicle
+              ? `${props.curVehicle.brand} ${props.curVehicle.model}`
+              : "Currently unassigned."
+          }`}
+            )
+          </h2>
+          {isStudent && isPaid && +props.id !== +props.instructorRequestId && (
             <Button onClick={sendRequestToInstructorHandler}>
               Send Request
             </Button>
+          )}
+          {isStudent && isPaid && +props.id === +props.instructorRequestId && (
+            <Button disabled>Currently Requested</Button>
           )}
           {isStudent && !isPaid && <p>You need to pay for the course first!</p>}
           {!isMember && (
@@ -121,7 +138,6 @@ const Instructor = (props) => {
               <ButtonLink link={link}>Details</ButtonLink>
               <ButtonLink link={mailboxLink}>Send Message</ButtonLink>
             </div>
-            
           )}
         </header>
       </div>

@@ -1,6 +1,10 @@
 import React, { useCallback, useEffect, useState } from "react";
 
-import { Calendar, dateFnsLocalizer, momentLocalizer } from "react-big-calendar";
+import {
+  Calendar,
+  dateFnsLocalizer,
+  momentLocalizer,
+} from "react-big-calendar";
 import format from "date-fns/format";
 import parse from "date-fns/parse";
 import startOfWeek from "date-fns/startOfWeek";
@@ -14,9 +18,9 @@ import "react-datepicker/dist/react-datepicker.css";
 import EventComponent from "./EventComponent";
 import { styled, Box } from "@mui/system";
 import ModalUnstyled from "@mui/base/ModalUnstyled";
-import moment from 'moment'
+import moment from "moment";
 
-import classes from './Schedule.module.css';
+import classes from "./Schedule.module.css";
 
 const StyledModal = styled(ModalUnstyled)`
   position: fixed;
@@ -65,42 +69,6 @@ const eventOptions = [
   );
 });
 
-const dummy_data = [
-  {
-    title: "Theory Class",
-    start: new Date(2022, 0, 7),
-    end: new Date(2022, 0, 7),
-    status: "Not completed",
-    users: ["Janusz Drwal", "Marian Zwał"],
-  },
-  {
-    title: "Theory Class",
-    start: new Date(2022, 0, 10, 13, 30),
-    end: new Date(2022, 0, 10, 16, 30),
-    status: "Completed",
-    users: ["Hypohondriusz Marcinszewski"],
-  },
-  {
-    title: "Practical Class",
-    start: new Date(2022, 0, 5),
-    end: new Date(2022, 0, 5),
-    status: "Not completed",
-    users: ["Janusz Drwal"],
-  },
-];
-
-// const locales = {
-//   "en-US": require("date-fns/locale/en-US"),
-// };
-// const localizer = dateFnsLocalizer({
-//   format,
-//   parse,
-//   startOfWeek,
-//   getDay,
-//   getHours,
-//   locales,
-// });
-
 const localizer = momentLocalizer(moment);
 
 const Schedule = (props) => {
@@ -111,7 +79,6 @@ const Schedule = (props) => {
     start: "",
     end: "",
     user: "",
-    description: "",
   });
   //if owner to get courses list dla branch
   //if owner i wybiore available course to fetch szukanie studentow w tym kursie do listy
@@ -122,9 +89,15 @@ const Schedule = (props) => {
 
   const [allEvents, setAllEvents] = useState([]);
   const [allStudentEvents, setAllStudentEvents] = useState([]);
+  const [studentsOfInstructor, setStudentsOfInstructor] = useState([]);
+  const [selectedStudent, setSelectedStudent] = useState(undefined);
+  const [selectedInstructor, setSelectedInstructor] = useState(undefined);
   const [isChanged, setIsChanged] = useState(false);
 
   const setSelectedCourseHandler = (e) => {
+    if (document.getElementById("firstCourse")) {
+      document.getElementById("firstCourse").remove();
+    }
     setSelectedCourse(e.target.value);
     fetch("http://localhost:3001/getStudentsOfCourse", {
       method: "POST",
@@ -161,35 +134,42 @@ const Schedule = (props) => {
     setIsOpened(false);
   };
 
-  const newEventHandler = async(e) => {
+  const newEventHandler = async (e) => {
     e.preventDefault();
-   // setAllEvents([...allEvents, newEvent]);
-   console.log(newEvent);
-   try {
-    const res = await fetch('http://localhost:3001/createNewEvent', {
-      method: 'POST',
-      headers: {
-        Authorization: "Bearer " + props.loginStatus.token,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        title: newEvent.title,
-        _id: newEvent.title === 'Theory Class (Course)' ? selectedCourse : newEvent.user,
-        startDate: newEvent.start,
-        endDate: newEvent.end,
-        description: newEvent.description,
-      })
-    })
-    
-  
-   } catch(err) {
-     console.log(err);
-   }
-   setIsChanged(true);
+    // setAllEvents([...allEvents, newEvent]);
+    console.log(newEvent);
+    try {
+      const res = await fetch("http://localhost:3001/createNewEvent", {
+        method: "POST",
+        headers: {
+          Authorization: "Bearer " + props.loginStatus.token,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          title: newEvent.title,
+          _id:
+            newEvent.title === "Theory Class (Course)"
+              ? selectedCourse
+              : newEvent.user,
+          startDate: newEvent.start,
+          endDate: newEvent.end,
+        }),
+      });
+      const resData = await res.json();
+
+      if (props.loginStatus.userRole === "instructor") {
+        setSelectedStudentHandlerForInstructor(e);
+      }
+      window.location.reload();
+      setIsChanged(true);
+    } catch (err) {
+      console.log(err);
+    }
+    setIsChanged(true);
   };
 
-  const loadStudentEvents = useCallback(async() => {
-    if(props.loginStatus.userRole === 'student') {
+  const loadStudentEvents = useCallback(async () => {
+    if (props.loginStatus.userRole === "student") {
       try {
         const res = await fetch("http://localhost:3001/getStudentCalendar", {
           headers: {
@@ -209,20 +189,22 @@ const Schedule = (props) => {
           })
         );
 
-        setAllEvents(resData.eventList.map(event => ({
-          title: event.title,
-          start: moment(event.startDate).toDate(),
-          end: moment(event.endDate).toDate(),
-          status: event.status,
-          description: event.description
-        })))
-      } catch(err) {
+        setAllEvents(
+          resData.eventList.map((event) => ({
+            _id: event._id,
+            title: event.title,
+            start: moment(event.startDate).toDate(),
+            end: moment(event.endDate).toDate(),
+            status: event.status,
+            description: event.description,
+            props: props,
+          }))
+        );
+      } catch (err) {
         console.log(err);
       }
     }
-  }, [props.loginStatus.token, props.loginStatus.userRole])
-
-
+  }, [props]);
 
   const loadCourses = useCallback(async () => {
     if (props.loginStatus.userRole === "owner") {
@@ -245,151 +227,421 @@ const Schedule = (props) => {
           })
         );
 
-        const resInstructors = await fetch("http://localhost:3001/getInstructorsForSchedule", {
-          headers: {
-            Authorization: "Bearer " + props.loginStatus.token
+        const resInstructors = await fetch(
+          "http://localhost:3001/getInstructorsForSchedule",
+          {
+            headers: {
+              Authorization: "Bearer " + props.loginStatus.token,
+            },
           }
-        })
+        );
         if (res.status !== 200) {
           throw new Error("Failed to fetch instructors.");
         }
 
         const resDataInstructors = await resInstructors.json();
-        setAvailableInstructors(resDataInstructors.instructors.map(instructor => {
-          return {
-            ...instructor
-          }
-        }))
+        setAvailableInstructors(
+          resDataInstructors.instructors.map((instructor) => {
+            return {
+              ...instructor,
+            };
+          })
+        );
         setIsChanged(false);
       } catch (err) {
         console.log(err);
       }
     }
+    setIsChanged(false);
   }, [props.loginStatus.userRole, props.loginStatus.token]);
 
-  useEffect(() => loadCourses().then(x => loadStudentEvents()), [loadCourses, loadStudentEvents]);
-  console.log(newEvent.title);
-  console.log(availableCourses);
-  console.log("selected course:", selectedCourse);
-  console.log("students of course", studentsOfCourse);
-  console.log("TEST NEW EVENT RESET USER", newEvent);
-  console.log(allStudentEvents);
+  const getStudentsOfInstructorList = useCallback(async () => {
+    if (props.loginStatus.userRole === "instructor") {
+      try {
+        const res = await fetch(
+          "http://localhost:3001/studentListOfInstructor",
+          {
+            headers: {
+              Authorization: "Bearer " + props.loginStatus.token,
+            },
+          }
+        );
+        if (res.status !== 200) {
+          throw new Error("Failed to fetch students list.");
+        }
+        const resData = await res.json();
 
+        setStudentsOfInstructor(
+          resData.students.map((student) => {
+            return student;
+          })
+        );
+        setIsChanged(false);
+      } catch (err) {
+        console.log(err);
+      }
+    }
+  }, [props.loginStatus.token, props.loginStatus.userRole]);
+
+  useEffect(
+    () =>
+      loadCourses().then((x) =>
+        loadStudentEvents().then((x) => getStudentsOfInstructorList())
+      ),
+    [loadCourses, loadStudentEvents, getStudentsOfInstructorList]
+  );
+
+  const setSelectedStudentHandlerForOwner = (e) => {
+    if (document.getElementById("first")) {
+      document.getElementById("first").remove();
+    }
+    setSelectedStudent(e.target.value);
+    fetch("http://localhost:3001/getStudentCalendarForInstructor", {
+      method: "POST",
+      headers: {
+        Authorization: "Bearer " + props.loginStatus.token,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        userId: e.target.value ? e.target.value : selectedStudent,
+      }),
+    })
+      .then((res) => {
+        return res.json();
+      })
+      .then((resData) => {
+        console.log(resData);
+        setAllEvents(
+          resData.calendar?.events?.map((event) => ({
+            _id: event._id,
+            title: event.title,
+            start: moment(event.startDate).toDate(),
+            end: moment(event.endDate).toDate(),
+            status: event.status,
+            description: event.description,
+            props: props,
+          }))
+        );
+        setIsChanged(true);
+      });
+  };
+
+  const setSelectedStudentHandlerForInstructor = (e) => {
+    if (document.getElementById("first")) {
+      document.getElementById("first").remove();
+    }
+    setSelectedStudent(e.target.value);
+    setNewEvent({
+      ...newEvent,
+      title: "Practical Class",
+      user: e.target.value,
+    });
+    fetch("http://localhost:3001/getStudentCalendarForInstructor", {
+      method: "POST",
+      headers: {
+        Authorization: "Bearer " + props.loginStatus.token,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        userId: e.target.value ? e.target.value : selectedStudent,
+      }),
+    })
+      .then((res) => {
+        return res.json();
+      })
+      .then((resData) => {
+        console.log(resData);
+        setAllEvents(
+          resData.calendar?.events?.map((event) => ({
+            _id: event._id,
+            title: event.title,
+            start: moment(event.startDate).toDate(),
+            end: moment(event.endDate).toDate(),
+            status: event.status,
+            description: event.description,
+            props: props,
+          }))
+        );
+        setIsChanged(true);
+      });
+  };
+
+  const setSelectedInstructorHandler = (e) => {
+    if (document.getElementById("first")) {
+      document.getElementById("first").remove();
+    }
+    setSelectedInstructor(e.target.value);
+    fetch("http://localhost:3001/getStudentListOfSelectedInstructor", {
+      method: "POST",
+      headers: {
+        Authorization: "Bearer " + props.loginStatus.token,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        userId: e.target.value ? e.target.value : selectedInstructor,
+      }),
+    })
+      .then((res) => {
+        return res.json();
+      })
+      .then((resData) => {
+        setStudentsOfInstructor(
+          resData.students.map((student) => {
+            return student;
+          })
+        );
+        setAllEvents(
+          resData.calendar?.events?.map((event) => ({
+            _id: event._id,
+            title: event.title,
+            start: moment(event.startDate).toDate(),
+            end: moment(event.endDate).toDate(),
+            status: event.status,
+            description: event.description,
+            props: props,
+          }))
+        );
+        setIsChanged(true);
+      })
+      .catch((err) => console.log(err));
+  };
+  console.log(isChanged);
+  console.log(selectedStudent);
 
   return (
     <div>
-      <Button onClick={showAddEventModal}>Add Event</Button>
-      <StyledModal
-        aria-labelledby="unstyled-modal-title"
-        aria-describedby="unstyled-modal-description"
-        open={isOpened}
-        onClose={hideAddEventModel}
-        BackdropComponent={Backdrop}
-      >
-        <Box sx={style}>
-          <div>
-            <form onSubmit={newEventHandler}>
-              <h5>Event Type</h5>
-              <select
-                selected="selected"
-                value={newEvent.title}
-                name="event"
-                id="event"
-                onChange={(e) => {
-                  setNewEvent({ ...newEvent, title: e.target.value });
-                }}
-              >
-                {eventOptions}
-              </select>
-              {(newEvent.title === 'Individual (Instructor)') && (
-                <select selected="selected" value={newEvent.user === undefined ? "" : newEvent.user}  name="instructor"
-                id="instructor"  onChange={(e) => {
-                  setNewEvent({ ...newEvent, user: e.target.value });
-                }}>
-                  {availableInstructors.map(instructor => {
-                    return (
-                      <option key={instructor._id} value={instructor._id}>
-                      {instructor.firstname} {instructor.lastname}
-                    </option>
-                    )
-                  })}
-                </select>
-              )}
-              {(newEvent.title === "Practical Class" || newEvent.title === 'Internal Exam' || newEvent.title === "Theory Class (Course)") && (
-                <select
-                  selected="selected"
-                  value={selectedCourse === undefined ? "" : selectedCourse._id}
-                  name="course"
-                  id="course"
-                  onChange={setSelectedCourseHandler}
-                >
-                  {availableCourses.map((course) => {
-                    return (
-                      <option key={course._id} value={course._id}>
-                        {course.name}
-                      </option>
-                    );
-                  })}
-                </select>
-              )}
-              {selectedCourse !== undefined && (newEvent.title === "Practical Class" || newEvent.title === 'Internal Exam') && (
-                <select
-                  value={newEvent.user === undefined ? "" : newEvent.user}
-                  selected="selected"
-                  name="student"
-                  id="student"
-                  onChange={(e) => {
-                    setNewEvent({ ...newEvent, user: e.target.value });
-                  }}
-                >
-                  {studentsOfCourse.map((student) => {
-                    return (
-                      <option key={student._id} value={student._id}>
-                        {student.firstname} {student.lastname}
-                      </option>
-                    );
-                  })}
-                </select>
-              )}
+      {props.loginStatus.userRole === "instructor" && (
+        <select
+          selected="selected"
+          value={
+            selectedStudent === undefined ||
+            selectedStudent === "Select Student"
+              ? ""
+              : selectedStudent._id
+          }
+          name="student"
+          id="student"
+          onChange={setSelectedStudentHandlerForInstructor}
+        >
+          <option id="firstStudent">Select Student</option>
+          {studentsOfInstructor.map((student) => {
+            return (
+              <option
+                key={student._id}
+                value={student._id}
+              >{`${student.firstname} ${student.lastname}`}</option>
+            );
+          })}
+        </select>
+      )}
 
-              <DatePicker
-                showTimeSelect
-                dateFormat="MMMM d, yyyy h:mm aa"
-                showTimeInput
-                placeholderText="Start Date"
-                style={{ marginRight: "10px" }}
-                selected={newEvent.start}
-                onChange={(start) => setNewEvent({ ...newEvent, start })}
-              />
+      {props.loginStatus.userRole === "owner" && (
+        <div>
+          <select
+            selected="selected"
+            value={
+              selectedInstructor === undefined ||
+              selectedInstructor === "Select Instructor"
+                ? ""
+                : selectedInstructor._id
+            }
+            name="instructor"
+            id="instructor"
+            onChange={setSelectedInstructorHandler}
+          >
+            <option id="first">Select Instructor</option>
+            {availableInstructors.map((instructor) => {
+              return (
+                <option
+                  key={instructor._id}
+                  value={instructor._id}
+                >{`${instructor.firstname} ${instructor.lastname}`}</option>
+              );
+            })}
+          </select>
+          {selectedInstructor !== undefined && (
+            <select
+              selected="selected"
+              value={
+                selectedStudent === undefined ||
+                selectedStudent === "Select Student"
+                  ? ""
+                  : selectedStudent._id
+              }
+              name="student"
+              id="student"
+              onChange={setSelectedStudentHandlerForInstructor}
+            >
+              <option id="firstStudent">Select Student</option>
+              {studentsOfInstructor.map((student) => {
+                return (
+                  <option
+                    key={student._id}
+                    value={student._id}
+                  >{`${student.firstname} ${student.lastname}`}</option>
+                );
+              })}
+            </select>
+          )}
+        </div>
+      )}
+      {(props.loginStatus.userRole === "instructor" ||
+        props.loginStatus.userRole === "owner") && (
+        <div>
+          {props.loginStatus.userRole === "instructor" &&
+            (document.getElementById("first") ? (
+              <></>
+            ) : (
+              <Button onClick={showAddEventModal}>Add Event</Button>
+            ))}
+          {props.loginStatus.userRole === "owner" && (
+            <Button onClick={showAddEventModal}>Add Event</Button>
+          )}
+          <StyledModal
+            aria-labelledby="unstyled-modal-title"
+            aria-describedby="unstyled-modal-description"
+            open={isOpened}
+            onClose={hideAddEventModel}
+            BackdropComponent={Backdrop}
+          >
+            <Box sx={style}>
+              <div>
+                <form onSubmit={newEventHandler}>
+                  {props.loginStatus.userRole === "owner" && (
+                    <div>
+                      <h5>Event Type</h5>
+                      <select
+                        selected="selected"
+                        value={newEvent.title}
+                        name="event"
+                        id="event"
+                        onChange={(e) => {
+                          setNewEvent({ ...newEvent, title: e.target.value });
+                        }}
+                      >
+                        {eventOptions}
+                      </select>
+                      {newEvent.title === "Individual (Instructor)" && (
+                        <select
+                          selected="selected"
+                          value={
+                            newEvent.user === undefined ? "" : newEvent.user
+                          }
+                          name="instructor"
+                          id="instructor"
+                          onChange={(e) => {
+                            setNewEvent({
+                              ...newEvent,
+                              user: e.target.value,
+                            });
+                          }}
+                        >
+                          <option id="firstInstructor">
+                            Select Instructor
+                          </option>
+                          {availableInstructors.map((instructor) => {
+                            return (
+                              <option
+                                key={instructor._id}
+                                value={instructor._id}
+                              >
+                                {instructor.firstname} {instructor.lastname}
+                              </option>
+                            );
+                          })}
+                        </select>
+                      )}
+                      {(newEvent.title === "Practical Class" ||
+                        newEvent.title === "Internal Exam" ||
+                        newEvent.title === "Theory Class (Course)") && (
+                        <select
+                          selected="selected"
+                          value={
+                            selectedCourse === undefined
+                              ? ""
+                              : selectedCourse._id
+                          }
+                          name="course"
+                          id="course"
+                          onChange={setSelectedCourseHandler}
+                        >
+                          <option id="firstCourse">Select Course</option>
+                          {availableCourses.map((course) => {
+                            return (
+                              <option key={course._id} value={course._id}>
+                                {course.name}
+                              </option>
+                            );
+                          })}
+                        </select>
+                      )}
+                      {selectedCourse !== undefined &&
+                        (newEvent.title === "Practical Class" ||
+                          newEvent.title === "Internal Exam") && (
+                          <select
+                            value={
+                              newEvent.user === undefined ? "" : newEvent.user
+                            }
+                            selected="selected"
+                            name="student"
+                            id="student"
+                            onChange={(e) => {
+                              setNewEvent({
+                                ...newEvent,
+                                user: e.target.value
+                                  ? e.target.value
+                                  : undefined,
+                              });
+                            }}
+                          >
+                            <option id="firstStudent">Select Student</option>
+                            {studentsOfCourse.map((student) => {
+                              return (
+                                <option key={student._id} value={student._id}>
+                                  {student.firstname} {student.lastname}
+                                </option>
+                              );
+                            })}
+                          </select>
+                        )}
+                    </div>
+                  )}
 
-              <DatePicker
-                showTimeSelect
-                dateFormat="MMMM d, yyyy h:mm aa"
-                showTimeInput
-                placeholderText="End Date"
-                style={{ marginRight: "10px" }}
-                selected={newEvent.end}
-                onChange={(end) => setNewEvent({ ...newEvent, end })}
-              />
-              <textarea id="description" className={classes.textarea} onChange={(e) => {
-          setNewEvent({ ...newEvent, description: e.target.value });
-        }}></textarea>
+                  <DatePicker
+                    showTimeSelect
+                    dateFormat="MMMM d, yyyy h:mm aa"
+                    showTimeInput
+                    placeholderText="Start Date"
+                    style={{ marginRight: "10px" }}
+                    selected={newEvent.start}
+                    onChange={(start) => setNewEvent({ ...newEvent, start })}
+                  />
 
-
-              <Button type="Submit">Add Event</Button>
-            </form>
-          </div>
-        </Box>
-      </StyledModal>
+                  <DatePicker
+                    showTimeSelect
+                    dateFormat="MMMM d, yyyy h:mm aa"
+                    showTimeInput
+                    placeholderText="End Date"
+                    style={{ marginRight: "10px" }}
+                    selected={newEvent.end}
+                    onChange={(end) => setNewEvent({ ...newEvent, end })}
+                  />
+                  <Button type="Submit">Add Event</Button>
+                </form>
+              </div>
+            </Box>
+          </StyledModal>
+        </div>
+      )}
 
       <Calendar
         localizer={localizer}
         events={allEvents}
         startAccessor="start"
         endAccessor="end"
-        style={{ height: 1000, width: 1200, marginLeft: -200 }}
+        style={{ height: 800, width: 1000, marginLeft: -100 }}
         eventPropGetter={() => ({
-          style: { backgroundColor: "transparent", overflow: "hidden" },
+          style: { backgroundColor: "darkgray", overflow: "hidden" },
         })}
         components={{
           event: EventComponent,

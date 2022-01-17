@@ -17,16 +17,15 @@ const Courses = (props) => {
   const loadCourses = useCallback(async () => {
     if (props.loginStatus.userRole === "owner") {
       try {
-
         const res = await fetch("http://localhost:3001/courseList", {
           headers: {
             Authorization: "Bearer " + props.loginStatus.token,
           },
-        })
+        });
         if (res.status !== 200) {
           throw new Error("Failed to fetch courses.");
         }
-        
+
         const resData = await res.json();
         setCourses((coursesInfo) => ({
           ...coursesInfo,
@@ -44,34 +43,41 @@ const Courses = (props) => {
 
     if (props.loginStatus.userRole === "student") {
       try {
-      const res = await fetch("http://localhost:3001/memberCourses", {
-        headers: {
-          Authorization: "Bearer " + props.loginStatus.token,
-        },
-      })
-          if (res.status !== 200) {
-            throw new Error("Failed to fetch courses.");
-          }
-          const resData = await res.json();
-          setCourses((coursesInfo) => ({
-            ...coursesInfo,
-            courses: resData.courses.map((course) => {
-              return {
-                ...course,
-              };
-            }),
-          }));
-          setAttendedCourseId(resData.attendedCourseId);
-          setIsAdded(false);
-        } catch(err) {
-          console.log(err);
+        const res = await fetch("http://localhost:3001/memberCourses", {
+          headers: {
+            Authorization: "Bearer " + props.loginStatus.token,
+          },
+        });
+        if (res.status !== 200) {
+          throw new Error("Failed to fetch courses.");
         }
+        const resData = await res.json();
+        setCourses((coursesInfo) => ({
+          ...coursesInfo,
+          courses: resData.courses.map((course) => {
+            return {
+              ...course,
+            };
+          }),
+        }));
+        setAttendedCourseId(resData.attendedCourseId);
+        setIsAdded(false);
+      } catch (err) {
+        console.log(err);
+      }
     }
-  }
-  , [props.loginStatus.token, props.loginStatus.userRole])
+  }, [props.loginStatus.token, props.loginStatus.userRole]);
 
-  useEffect(() => loadCourses().finally(x => setIsLoaded(true))
-    , [props.loginStatus.token, props.loginStatus.userRole, isAdded, loadCourses, setIsLoaded]);
+  useEffect(
+    () => loadCourses().finally((x) => setIsLoaded(true)),
+    [
+      props.loginStatus.token,
+      props.loginStatus.userRole,
+      isAdded,
+      loadCourses,
+      setIsLoaded,
+    ]
+  );
 
   const [showCreateCourseCart, setShowCreateCourseCart] = useState(false);
 
@@ -83,7 +89,7 @@ const Courses = (props) => {
   const updateCourses = (e, resData) => {
     e.preventDefault();
     setIsAdded(true);
-  }
+  };
 
   let buttonContent = "Show Course Creator";
 
@@ -91,20 +97,22 @@ const Courses = (props) => {
     buttonContent = "Hide Course Creator";
   }
 
-  return isLoaded ?
+  return isLoaded ? (
     <div>
       {props.loginStatus.userRole === "student" && !!attendedCourseId && (
         <div>
-          You already attend the {" "}
-          <ButtonLink link="/studentDash">course</ButtonLink>.
+          <h2>
+            You already attend the{" "}
+            <ButtonLink link="/studentDash">course</ButtonLink>.
+          </h2>
         </div>
       )}
-      {!!!attendedCourseId && (
+      {!attendedCourseId && (props.loginStatus.userRole === 'owner' || props.loginStatus.userRole === 'student') && (
         <div className={classes.coursesDiv}>
           <button onClick={showCreateCourseCartHandler}>{buttonContent}</button>
           {showCreateCourseCart && (
             <CreateCourse
-            onCreateCourse={updateCourses}
+              onCreateCourse={updateCourses}
               loginStatus={props.loginStatus}
               activeBranch={props.activeBranch}
             />
@@ -114,7 +122,7 @@ const Courses = (props) => {
           {courses.courses.length > 0 &&
             courses.courses.map((course) => (
               <Course
-              activeBranch={props.activeBranch}
+                activeBranch={props.activeBranch}
                 loginStatus={props.loginStatus}
                 key={course._id}
                 id={course._id}
@@ -128,7 +136,13 @@ const Courses = (props) => {
             ))}
         </div>
       )}
-    </div> : <div className={classes.centered}> <Loader/> </div> 
+    </div>
+  ) : (
+    <div className={classes.centered}>
+      {" "}
+      <Loader />{" "}
+    </div>
+  );
 };
 
 export default Courses;

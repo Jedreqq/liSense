@@ -48,6 +48,8 @@ const SingleMessage = (props) => {
     }
   };
 
+  let mailboxLink = '/mailbox/write/' + messageData.sender._id + '?replyTopic=' + messageData.topic
+
   useEffect(() => loadSingleMessage().finally((x) => setIsLoaded(true)), []);
   return isLoaded ? (
     <React.Fragment>
@@ -70,6 +72,7 @@ const SingleMessage = (props) => {
           <p>{messageData.messageContent}</p>
         </section>
       </div>
+      <ButtonLink link={mailboxLink}>Reply</ButtonLink>
     </React.Fragment>
   ) : (
     <div className={classes.centered}>

@@ -21,7 +21,7 @@ const StudentDash = (props) => {
       },
     })
       if (res.status !== 200) {
-        throw new Error("Failed to fetch courses.");
+        throw new Error("Failed to fetch student data.");
       }
       const resData = await res.json();
  
@@ -47,6 +47,7 @@ const StudentDash = (props) => {
   
   return isLoaded ?
     <div>
+      {!attendedCourseId && <p>You are a new member of branch. Go to <ButtonLink link='/courses'>Courses</ButtonLink> page to choose course You want to attend to.</p>}
       {paymentStatus === "unpaid" && (
         <div>
           You need to pay for the course first!

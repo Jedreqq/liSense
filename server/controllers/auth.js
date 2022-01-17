@@ -5,6 +5,7 @@ const jwt = require("jsonwebtoken");
 const Category = require("../models/category");
 const UserCategory = require("../models/user-category");
 const Mailbox = require("../models/mailbox");
+const Calendar = require("../models/calendar");
 
 exports.signup = (req, res, next) => {
   const errors = validationResult(req);
@@ -48,11 +49,18 @@ exports.signup = (req, res, next) => {
     .then((result) => {
       console.log(result);
       mailbox = new Mailbox({
-        userId: user._id
+        userId: user._id,
       });
       return mailbox.save();
-    }).then(result => {
-      if(role === 'instructor') {
+    })
+    .then((result) => {
+      calendar = new Calendar({
+        userId: user._id,
+      });
+      return calendar.save();
+    })
+    .then((result) => {
+      if (role === "instructor") {
         categories.forEach((category) => {
           Category.findAll({ where: { type: category } }).then((cats) => {
             cats.forEach((cat) => {
@@ -69,7 +77,8 @@ exports.signup = (req, res, next) => {
       res.status(201).json({
         message: `User with role ${role} created.`,
       });
-    }).catch((err) => {
+    })
+    .catch((err) => {
       if (!err.statusCode) {
         res.json({ message: err.message });
         res.json({ message: "Server is here man." });
@@ -115,7 +124,7 @@ exports.login = (req, res, next) => {
         role: loadedUser.role,
         memberId: loadedUser.memberId,
         email: loadedUser.email,
-        isAuth: true
+        isAuth: true,
       });
     })
     .catch((err) => {

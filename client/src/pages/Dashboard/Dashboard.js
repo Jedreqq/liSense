@@ -12,6 +12,7 @@ const Dashboard = (props) => {
   const [hasCreatedSchool, setHasCreatedSchool] = useState(false); //if school created by owner he gets redirected to his school
   const [isMember, setIsMember] = useState(false);
   const [allBranches, setAllBranches] = useState([]);
+  const [BranchRequestId, setBranchRequestId] = useState(null);
   const navigate = useNavigate();
 
   const [isLoaded, setIsLoaded] = useState(false);
@@ -65,6 +66,7 @@ const Dashboard = (props) => {
                 };
               })
             );
+            setBranchRequestId(resData.BranchRequestId);
       } catch (err) {
         console.log(err);
       }
@@ -108,11 +110,15 @@ const Dashboard = (props) => {
       });
   };
 
+  const onBranchRequestIdChange = (e, id) => {
+    e.preventDefault();
+    setBranchRequestId(id);
+  }
+
   let isStudent = role === "student";
   let isInstructor = role === "instructor";
   let isOwner = role === "owner";
 
-  console.log(isMember);
 
   return isLoaded ?
     <div>
@@ -127,6 +133,8 @@ const Dashboard = (props) => {
           {allBranches.length > 0 &&
             allBranches.map((branch) => (
               <Branch
+              onBranchRequestIdChange={onBranchRequestIdChange}
+              BranchRequestId={BranchRequestId}
                 loginStatus={props.loginStatus}
                 key={branch._id}
                 id={branch._id}
