@@ -24,17 +24,6 @@ verifyToken = (req, res, next) => {
   }
   req.userId = decodedToken.userId;
   req.userRole = decodedToken.role;
-  // if(!token) {
-  //     return res.status(403).send({message: 'No token provided.'});
-  // }
-  // jwt.verify(token, 'liSenseAppEngineerSecret', (err, decodedToken) => {
-  //     if(err) {
-  //         return res.status(401).send({message: 'Not authorized.'});
-  //     }
-  //     req.userId = decodedToken.userId;
-  //     req.userRole = decodedToken.role;
-  // })
-  // req.userRole = decodedToken.role //I will use it for authorizing access, I know user id stored in token
   next();
 };
 
@@ -63,18 +52,6 @@ verifyTokenSocket = (token) => {
     userId: decodedToken.userId,
     role: decodedToken.role,
   };
-  // if(!token) {
-  //     return res.status(403).send({message: 'No token provided.'});
-  // }
-  // jwt.verify(token, 'liSenseAppEngineerSecret', (err, decodedToken) => {
-  //     if(err) {
-  //         return res.status(401).send({message: 'Not authorized.'});
-  //     }
-  //     req.userId = decodedToken.userId;
-  //     req.userRole = decodedToken.role;
-  // })
-  // req.userRole = decodedToken.role //I will use it for authorizing access, I know user id stored in token
-
 };
 
 isOwner = (req, res, next) => {
@@ -127,12 +104,17 @@ isStudentOrInstructor = (req, res, next) => {
   return;
 };
 
+isInstructorOrOwner = (req, res, next) => {
+  
+}
+
 const authJwt = {
   verifyToken: verifyToken,
   isOwner: isOwner,
   isInstructor: isInstructor,
   isStudent: isStudent,
   isStudentOrInstructor: isStudentOrInstructor,
+  isInstructorOrOwner: isInstructorOrOwner,
   verifyTokenSocket: verifyTokenSocket
 };
 

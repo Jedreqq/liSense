@@ -20,8 +20,6 @@ const Payment = (props) => {
 
   const [msg, setMsg] = useState("");
 
-  const navigate = useNavigate();
-
   const loadPayment = useCallback(async () => {
     try {
       const res = await fetch("http://localhost:3001/studentPaymentData", {

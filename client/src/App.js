@@ -535,7 +535,6 @@ function App() {
       token={loginStatus.token}
     >
       <Layout
-        // notificationCount={notificationCount}
         onLogout={logoutHandler}
         loginStatus={loginStatus}
         memberId={memberId}

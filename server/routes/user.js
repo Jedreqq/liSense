@@ -6,7 +6,7 @@ const {
   isStudent,
   isOwner,
   isStudentOrInstructor,
-} = require("../middleware/is-auth");
+} = require("../security/is-auth");
 
 const userController = require("../controllers/user");
 
@@ -117,8 +117,6 @@ router.get('/getInstructorsForSchedule', verifyToken, userController.getInstruct
 
 ///calendar get
 router.get('/getStudentCalendar', verifyToken, isStudent, userController.getStudentCalendar);
-
-// router.get('/getInstructorCalendar', verifyToken, isInstructor, userController.getInstructorCalendar);
 
 router.post('/getStudentCalendarForInstructor', verifyToken, userController.getStudentCalendarForInstructor)
 

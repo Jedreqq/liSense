@@ -181,16 +181,17 @@ const Schedule = (props) => {
         }
 
         const resData = await res.json();
+        console.log(resData);
         setAllStudentEvents(
-          resData.eventList.map((event) => {
+          resData.eventList.events.map((event) => {
             return {
-              ...event,
+              ...event
             };
           })
         );
 
         setAllEvents(
-          resData.eventList.map((event) => ({
+          resData.eventList.events.map((event) => ({
             _id: event._id,
             title: event.title,
             start: moment(event.startDate).toDate(),
@@ -283,49 +284,6 @@ const Schedule = (props) => {
     }
   }, [props.loginStatus.token, props.loginStatus.userRole]);
 
-  useEffect(
-    () =>
-      loadCourses().then((x) =>
-        loadStudentEvents().then((x) => getStudentsOfInstructorList())
-      ),
-    [loadCourses, loadStudentEvents, getStudentsOfInstructorList]
-  );
-
-  const setSelectedStudentHandlerForOwner = (e) => {
-    if (document.getElementById("first")) {
-      document.getElementById("first").remove();
-    }
-    setSelectedStudent(e.target.value);
-    fetch("http://localhost:3001/getStudentCalendarForInstructor", {
-      method: "POST",
-      headers: {
-        Authorization: "Bearer " + props.loginStatus.token,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        userId: e.target.value ? e.target.value : selectedStudent,
-      }),
-    })
-      .then((res) => {
-        return res.json();
-      })
-      .then((resData) => {
-        console.log(resData);
-        setAllEvents(
-          resData.calendar?.events?.map((event) => ({
-            _id: event._id,
-            title: event.title,
-            start: moment(event.startDate).toDate(),
-            end: moment(event.endDate).toDate(),
-            status: event.status,
-            description: event.description,
-            props: props,
-          }))
-        );
-        setIsChanged(true);
-      });
-  };
-
   const setSelectedStudentHandlerForInstructor = (e) => {
     if (document.getElementById("first")) {
       document.getElementById("first").remove();
@@ -405,8 +363,16 @@ const Schedule = (props) => {
       })
       .catch((err) => console.log(err));
   };
-  console.log(isChanged);
-  console.log(selectedStudent);
+
+
+  useEffect(
+    () =>
+      loadCourses().then((x) =>
+        loadStudentEvents().then((x) => getStudentsOfInstructorList())
+      ),
+    [loadCourses, loadStudentEvents, getStudentsOfInstructorList]
+  );
+
 
   return (
     <div>

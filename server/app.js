@@ -4,7 +4,7 @@ const bodyParser = require("body-parser");
 const sequelize = require("./util/database");
 var cors = require("cors");
 const app = express();
-const { verifyTokenSocket } = require("../server/middleware/is-auth");
+const { verifyTokenSocket } = require("./security/is-auth");
 
 const userInSession = {};
 
@@ -40,15 +40,7 @@ app.use(
   })
 );
 app.use(bodyParser.json());
-// app.use((req, res, next) => {
-//   res.setHeader("Access-Control-Allow-Origin", "*");
-//   res.setHeader(
-//     "Access-Control-Allow-Methods",
-//     "OPTIONS, GET, POST, PUT, PATCH, DELETE"
-//   );
-//   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
-//   next();
-// });
+
 
 app.use("/auth", authRoutes);
 app.use(userRoutes);
@@ -67,8 +59,7 @@ app.get("/api", (req, res, next) => {
 User.hasOne(School);
 School.belongsTo(User);
 
-School.hasMany(Branch);
-Branch.belongsTo(School);
+
 
 User.belongsTo(Branch, {
   as: "member",
@@ -150,7 +141,9 @@ sequelize
         methods: ["GET", "POST"],
       },
     });
+
     socketFunction.sendMessage = (message, receivedId) => {
+      console.log(Object.entries(userInSession))
       Object.entries(userInSession)
         .filter((x) => +x[1]?.userId === +receivedId)
         .map((x) => x[0])
@@ -159,10 +152,6 @@ sequelize
         });
     };
     io.on("connection", (socket) => {
-      console.log(
-        socket.id +
-          "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-      );
       let token = socket?.handshake?.headers?.authorization;
       userInSession[socket?.id] = verifyTokenSocket(token);
       console.log(userInSession);

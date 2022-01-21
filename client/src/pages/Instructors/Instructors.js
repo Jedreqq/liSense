@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
+import ReactPaginate from "react-paginate";
 import ButtonLink from "../../components/ButtonLink/ButtonLink";
 import Instructor from "../../components/Instructor/Instructor";
 import Loader from "../../components/Loader/Loader";
@@ -11,9 +12,90 @@ const Instructors = (props) => {
   let isMember = !!props.memberId;
 
   const [paymentStatus, setPaymentStatus] = useState(undefined);
-  const [assignedInstructorId, setAssignedInstructorId] = useState(undefined)
+  const [assignedInstructorId, setAssignedInstructorId] = useState(undefined);
   const [instructorRequestId, setInstructorRequestId] = useState(undefined);
   const [isChanged, setIsChanged] = useState(false);
+
+  const updateInstructors = (e, resData) => {
+    e.preventDefault();
+    setIsChanged(true);
+  };
+
+  const onRequestedInstructorIdChange = (e, id) => {
+    e.preventDefault();
+    setInstructorRequestId(id);
+  };
+
+  const [pageNumber, setPageNumber] = useState(0);
+  const instructorsPerPage = 3;
+  const pagesVisited = pageNumber * instructorsPerPage;
+
+  const pageCountInstructors = Math.ceil(
+    instructors.length / instructorsPerPage
+  );
+  const pageCountAppliers = Math.ceil(appliers.length / instructorsPerPage);
+
+  const changeCurrentPage = ({ selected }) => {
+    setPageNumber(selected);
+  };
+
+  const showInstructorsStudent = instructors
+    .slice(pagesVisited, pagesVisited + instructorsPerPage)
+    .map((instructor) => {
+      return (
+        <Instructor
+          onRequestedInstructorIdChange={onRequestedInstructorIdChange}
+          instructorRequestId={instructorRequestId}
+          paymentStatus={paymentStatus}
+          curVehicle={instructor.vehicle}
+          loginStatus={props.loginStatus}
+          key={instructor._id}
+          id={instructor._id}
+          firstname={instructor.firstname}
+          lastname={instructor.lastname}
+          email={instructor.email}
+          phoneNumber={instructor.phoneNumber}
+          isMember={instructor.memberId}
+          categories={instructor.categories}
+        />
+      );
+    });
+
+  const showInstructorsOwner = instructors
+    .slice(pagesVisited, pagesVisited + instructorsPerPage)
+    .map((instructor) => {
+      return (
+        <Instructor
+          onDecision={updateInstructors}
+          curVehicle={instructor.vehicle}
+          loginStatus={props.loginStatus}
+          key={instructor._id}
+          id={instructor._id}
+          firstname={instructor.firstname}
+          lastname={instructor.lastname}
+          email={instructor.email}
+          phoneNumber={instructor.phoneNumber}
+          isMember={instructor.memberId}
+          categories={instructor.categories}
+        />
+      );
+    });
+
+  const showAppliersOwner = appliers
+    .slice(pagesVisited, pagesVisited + instructorsPerPage)
+    .map((instructor) => (
+      <Instructor
+        onDecision={updateInstructors}
+        loginStatus={props.loginStatus}
+        key={instructor._id}
+        id={instructor._id}
+        firstname={instructor.firstname}
+        lastname={instructor.lastname}
+        email={instructor.email}
+        phoneNumber={instructor.phoneNumber}
+        categories={instructor.categories}
+      />
+    ));
 
   const loadInstructors = useCallback(async () => {
     if (isMember) {
@@ -84,85 +166,70 @@ const Instructors = (props) => {
     [props.loginStatus.token, isChanged, setIsLoaded, loadInstructors]
   );
 
-  const updateInstructors = (e, resData) => {
-    e.preventDefault();
-    setIsChanged(true);
-  };
-
-  const onRequestedInstructorIdChange = (e, id) => {
-    e.preventDefault();
-    setInstructorRequestId(id);
-  }
-
-  let instructorLink = '/instructors/' + assignedInstructorId
+  let instructorLink = "/instructors/" + assignedInstructorId;
 
   return isLoaded ? (
     <div>
-      {isMember && !!assignedInstructorId && <h2>You are already assigned to the <ButtonLink link={instructorLink}>Instructor</ButtonLink> </h2>}
+      {isMember && !!assignedInstructorId && (
+        <h2>
+          You are already assigned to the{" "}
+          <ButtonLink link={instructorLink}>Instructor</ButtonLink>{" "}
+        </h2>
+      )}
       {isMember && !assignedInstructorId && (
-        <div className={classes.instructorsDiv}>
-          <h2>Instructors List</h2>
-          {instructors.length === 0 && <p>No instructors in branch.</p>}
-          {instructors.length > 0 &&
-            instructors.map((instructor) => (
-              <Instructor
-              onRequestedInstructorIdChange={onRequestedInstructorIdChange}
-                instructorRequestId={instructorRequestId}
-                paymentStatus={paymentStatus}
-                curVehicle={instructor.vehicle}
-                loginStatus={props.loginStatus}
-                key={instructor._id}
-                id={instructor._id}
-                firstname={instructor.firstname}
-                lastname={instructor.lastname}
-                email={instructor.email}
-                phoneNumber={instructor.phoneNumber}
-                isMember={instructor.memberId}
-                categories={instructor.categories}
-              />
-            ))}
-        </div>
+        <React.Fragment>
+          <div className={classes.instructorsDiv}>
+            <h2>Instructors List</h2>
+            {instructors.length === 0 && <p>No instructors in branch.</p>}
+            {instructors.length > 0 && showInstructorsStudent}
+          </div>
+          <ReactPaginate
+            previousLabel={"Previous"}
+            nextLabel={"Next"}
+            pageCount={pageCountInstructors}
+            onPageChange={changeCurrentPage}
+            containerClassName={classes.pagination}
+            previousLinkClassName={classes.previousBtn}
+            nextLinkClassName={classes.nextBtn}
+            disabledClassName={classes.paginationDisabled}
+            activeClassName={classes.activePagination}
+          />
+        </React.Fragment>
       )}
       {!isMember && (
         <div>
           <div className={classes.instructorsDiv}>
             <h2>Instructors List</h2>
             {instructors.length === 0 && <p>No instructors in branch.</p>}
-            {instructors.length > 0 &&
-              instructors.map((instructor) => (
-                <Instructor
-                  onDecision={updateInstructors}
-                  curVehicle={instructor.vehicle}
-                  loginStatus={props.loginStatus}
-                  key={instructor._id}
-                  id={instructor._id}
-                  firstname={instructor.firstname}
-                  lastname={instructor.lastname}
-                  email={instructor.email}
-                  phoneNumber={instructor.phoneNumber}
-                  isMember={instructor.memberId}
-                  categories={instructor.categories}
-                />
-              ))}
+            {instructors.length > 0 && showInstructorsOwner}
           </div>
+          <ReactPaginate
+            previousLabel={"Previous"}
+            nextLabel={"Next"}
+            pageCount={pageCountInstructors}
+            onPageChange={changeCurrentPage}
+            containerClassName={classes.pagination}
+            previousLinkClassName={classes.previousBtn}
+            nextLinkClassName={classes.nextBtn}
+            disabledClassName={classes.paginationDisabled}
+            activeClassName={classes.activePagination}
+          />
           <div className={classes.instructorsDiv}>
             <h2>Appliers List</h2>
             {appliers.length === 0 && <p>No instructors applied.</p>}
-            {appliers.length > 0 &&
-              appliers.map((instructor) => (
-                <Instructor
-                  onDecision={updateInstructors}
-                  loginStatus={props.loginStatus}
-                  key={instructor._id}
-                  id={instructor._id}
-                  firstname={instructor.firstname}
-                  lastname={instructor.lastname}
-                  email={instructor.email}
-                  phoneNumber={instructor.phoneNumber}
-                  categories={instructor.categories}
-                />
-              ))}
+            {appliers.length > 0 && showAppliersOwner}
           </div>
+          <ReactPaginate
+            previousLabel={"Previous"}
+            nextLabel={"Next"}
+            pageCount={pageCountAppliers}
+            onPageChange={changeCurrentPage}
+            containerClassName={classes.pagination}
+            previousLinkClassName={classes.previousBtn}
+            nextLinkClassName={classes.nextBtn}
+            disabledClassName={classes.paginationDisabled}
+            activeClassName={classes.activePagination}
+          />
         </div>
       )}
     </div>

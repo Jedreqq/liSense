@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import CreateCourse from "./CreateCourse";
 import classes from "./Courses.module.css";
 import Course from "../../components/Course/Course";
 import ButtonLink from "../../components/ButtonLink/ButtonLink";
 import Loader from "../../components/Loader/Loader";
+import ReactPaginate from "react-paginate";
 
 const Courses = (props) => {
   const [attendedCourseId, setAttendedCourseId] = useState();
@@ -11,8 +12,36 @@ const Courses = (props) => {
     courses: [],
   });
 
+  const [pageNumber, setPageNumber] = useState(0);
   const [isAdded, setIsAdded] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
+  const coursesPerPage = 5;
+  const pagesVisited = pageNumber * coursesPerPage;
+
+  const showCourses = courses.courses
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+    .slice(pagesVisited, pagesVisited + coursesPerPage)
+    .map((course) => {
+      return (
+        <Course
+          activeBranch={props.activeBranch}
+          loginStatus={props.loginStatus}
+          key={course._id}
+          id={course._id}
+          name={course.name}
+          price={course.price}
+          dayOfStart={course.dayOfStart}
+          theoryClasses={course.theoryClasses}
+          practicalClasses={course.practicalClasses}
+          categories={course.categories}
+        />
+      );
+    });
+
+  const pageCount = Math.ceil(courses.courses.length / coursesPerPage);
+  const changeCurrentPage = ({ selected }) => {
+    setPageNumber(selected);
+  };
 
   const loadCourses = useCallback(async () => {
     if (props.loginStatus.userRole === "owner") {
@@ -107,35 +136,30 @@ const Courses = (props) => {
           </h2>
         </div>
       )}
-      {!attendedCourseId && (props.loginStatus.userRole === 'owner' || props.loginStatus.userRole === 'student') && (
-        <div className={classes.coursesDiv}>
-          <button onClick={showCreateCourseCartHandler}>{buttonContent}</button>
-          {showCreateCourseCart && (
-            <CreateCourse
-              onCreateCourse={updateCourses}
-              loginStatus={props.loginStatus}
-              activeBranch={props.activeBranch}
-            />
-          )}
-          <h2>Courses in branch</h2>
-          {courses.courses.length === 0 && <p>No courses in branch.</p>}
-          {courses.courses.length > 0 &&
-            courses.courses.map((course) => (
-              <Course
-                activeBranch={props.activeBranch}
+      {!attendedCourseId &&
+        (props.loginStatus.userRole === "owner" ||
+          props.loginStatus.userRole === "student") && (
+            <React.Fragment>
+          <div className={classes.coursesDiv}>
+            <button onClick={showCreateCourseCartHandler}>
+              {buttonContent}
+            </button>
+            {showCreateCourseCart && (
+              <CreateCourse
+                onCreateCourse={updateCourses}
                 loginStatus={props.loginStatus}
-                key={course._id}
-                id={course._id}
-                name={course.name}
-                price={course.price}
-                dayOfStart={course.dayOfStart}
-                theoryClasses={course.theoryClasses}
-                practicalClasses={course.practicalClasses}
-                categories={course.categories}
+                activeBranch={props.activeBranch}
               />
-            ))}
-        </div>
-      )}
+            )}
+            <h2>Courses in branch</h2>
+            {courses.courses.length === 0 && <p>No courses in branch.</p>}
+            {courses.courses.length > 0 &&
+              showCourses}
+              
+          </div>
+                   <ReactPaginate previousLabel={"Previous"} nextLabel={"Next"} pageCount={pageCount} onPageChange={changeCurrentPage} containerClassName={classes.pagination} previousLinkClassName={classes.previousBtn} nextLinkClassName={classes.nextBtn} disabledClassName={classes.paginationDisabled} activeClassName={classes.activePagination} />
+                   </React.Fragment>
+        )}
     </div>
   ) : (
     <div className={classes.centered}>

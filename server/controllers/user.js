@@ -58,31 +58,32 @@ exports.getDashboard = (req, res, next) => {
     });
 };
 
-exports.createSchool = (req, res, next) => {
-  const name = req.body.name;
-  let owner;
-  User.findByPk(req.userId)
-    .then((user) => {
-      owner = `${user.firstname} ${user.lastname}`;
-      const school = new School({
-        name: name,
-        owner: owner,
-        userId: req.userId,
-      });
-      const result = school.save();
-      res.status(201).json({
-        message: `New school ${name} created successfully`,
-        school: result,
-        owner: owner,
-      });
-    })
-    .catch((err) => {
-      if (!err.statusCode) {
-        err.statusCode = 500;
-        console.log(err);
-      }
-      next(err);
+exports.createSchool = async (req, res, next) => {
+  try {
+    const name = req.body.name;
+
+    const owner = await User.findByPk(req.userId);
+
+    owner = `${owner.firstname} ${owner.lastname}`;
+    const school = new School({
+      name: name,
+      owner: owner,
+      userId: req.userId,
     });
+    const result = await school.save();
+
+    res.status(201).json({
+      message: `New school ${name} created successfully`,
+      school: result,
+      owner: owner,
+    });
+  } catch (err) {
+    if (!err.statusCode) {
+      err.statusCode = 500;
+      console.log(err);
+    }
+    next(err);
+  }
 };
 
 exports.getSchool = (req, res, next) => {
@@ -117,37 +118,38 @@ exports.getSchool = (req, res, next) => {
     });
 };
 
-exports.getOwnerBranches = (req, res, next) => {
-  School.findOne({ where: { userId: req.userId } })
-    .then((school) => {
-      if (!school) {
-        const error = new Error("School not found.");
-        error.statusCode = 404;
-        throw error;
-      }
-      if (school.userId !== req.userId) {
-        const error = new Error("Invalid user");
-        error.statusCode = 404;
-        throw error;
-      }
-      school.getBranches().then((branches) => {
-        if (!branches) {
-          return res
-            .status(200)
-            .json({ message: "No branches found.", branches: null });
-        }
-        res.status(200).json({
-          message: "Branches found successfully.",
-          branches: branches,
-        });
-      });
-    })
-    .catch((err) => {
-      if (!err.statusCode) {
-        err.statusCode = 500;
-      }
-      next(err);
+exports.getOwnerBranches = async (req, res, next) => {
+  try {
+    const owner = await User.findByPk(req.userId);
+    let ownerActiveBranchId = owner.activeBranchId;
+    const school = await School.findOne({ where: { userId: req.userId } });
+    if (!school) {
+      const error = new Error("School not found.");
+      error.statusCode = 404;
+      throw error;
+    }
+    if (school.userId !== req.userId) {
+      const error = new Error("Invalid user");
+      error.statusCode = 404;
+      throw error;
+    }
+    const branches = await school.getBranches();
+    if (!branches) {
+      return res
+        .status(200)
+        .json({ message: "No branches found.", branches: null });
+    }
+    res.status(200).json({
+      message: "Branches found successfully.",
+      branches: branches,
+      ownerActiveBranchId: ownerActiveBranchId,
     });
+  } catch (err) {
+    if (!err.statusCode) {
+      err.statusCode = 500;
+    }
+    next(err);
+  }
 };
 
 exports.createBranch = (req, res, next) => {
@@ -191,9 +193,8 @@ exports.createBranch = (req, res, next) => {
     });
 };
 
-exports.getBranchesList = async(req, res, next) => {
+exports.getBranchesList = async (req, res, next) => {
   try {
-
     const user = await User.findByPk(req.userId);
 
     let BranchRequestId = user.BranchRequestId;
@@ -206,9 +207,9 @@ exports.getBranchesList = async(req, res, next) => {
     res.status(200).json({
       message: "Fetched branches successfully.",
       branches: branches,
-      BranchRequestId: BranchRequestId
+      BranchRequestId: BranchRequestId,
     });
-  } catch(err) {
+  } catch (err) {
     if (!err.statusCode) {
       err.statusCode = 500;
     }
@@ -607,14 +608,12 @@ exports.getSingleVehicle = async (req, res, next) => {
       },
       include: Category,
     });
-
     let vehicleCategories = [];
-
     vehicleCategories = vehicle.categories.map((category) => {
       return category.type;
     });
 
-    let instructorThatMatchCategoriesOfCourse = [];
+    let instructorThatMatchCategoriesOfVehicle = [];
 
     instructors.forEach((instructor) => {
       let helper = [];
@@ -623,14 +622,14 @@ exports.getSingleVehicle = async (req, res, next) => {
       });
 
       if (helper.some((v) => vehicleCategories.indexOf(v) >= 0)) {
-        instructorThatMatchCategoriesOfCourse.push(instructor);
+        instructorThatMatchCategoriesOfVehicle.push(instructor);
       }
     });
 
     res.status(200).json({
       message: "Vehicle fetched.",
       vehicle: vehicle,
-      instructors: instructorThatMatchCategoriesOfCourse,
+      instructors: instructorThatMatchCategoriesOfVehicle,
     });
   } catch (err) {
     if (!err.statusCode) {
@@ -668,12 +667,15 @@ exports.assignInstructorToVehicle = async (req, res, next) => {
 };
 
 exports.createCourse = async (req, res, next) => {
-  const name = req.body.name;
-  const price = req.body.price;
-  const dayOfStart = req.body.dayOfStart;
-  const theoryClasses = req.body.theoryClasses;
-  const practicalClasses = req.body.practicalClasses;
-  const categories = req.body.categories;
+  const {
+    name,
+    price,
+    dayOfStart,
+    theoryClasses,
+    practicalClasses,
+    categories,
+  } = req.body;
+
   let activeBranchId;
   let course;
   try {
@@ -994,7 +996,7 @@ exports.getInstructorListForStudent = async (req, res, next) => {
         { model: Payment },
       ],
     });
-    
+
     let userAssignedInstructorId = user.assignedInstructorId;
     let instructorRequestId = user.instructorRequestId;
 
@@ -1036,7 +1038,7 @@ exports.getInstructorListForStudent = async (req, res, next) => {
       instructors: instructorThatMatchCategoriesOfCourse,
       userPaymentStatus: userPaymentStatus,
       userAssignedInstructorId: userAssignedInstructorId,
-      instructorRequestId: instructorRequestId
+      instructorRequestId: instructorRequestId,
     });
   } catch (err) {
     if (!err.statusCode) {
@@ -1312,17 +1314,14 @@ exports.getNotifications = async (req, res, next) => {
 exports.createNewEvent = async (req, res, next) => {
   let instructor;
   let userList = [];
-  const { title, _id, startDate, endDate, description } = req.body;
+  const { title, _id, startDate, endDate } = req.body;
   if (title === "Practical Class") {
     try {
       const user = await User.findByPk(+_id);
-
-     
-        instructor = await User.findOne({
-          where: { _id: user.assignedInstructorId },
-        });
-        userList = [user._id, instructor._id];
-
+      instructor = await User.findOne({
+        where: { _id: user.assignedInstructorId },
+      });
+      userList = [user._id, instructor._id];
       const event = new Event({
         title: title,
         startDate: startDate,
@@ -1330,7 +1329,6 @@ exports.createNewEvent = async (req, res, next) => {
         description: `Student: ${user.firstname} ${user.lastname}, Instructor: ${instructor.firstname} ${instructor.lastname}`,
         status: false,
       });
-
       const result = await event.save();
       userList.forEach((user) => {
         const eventCalendar = new CalendarEvent({
@@ -1339,21 +1337,17 @@ exports.createNewEvent = async (req, res, next) => {
         });
         const savedConnection = eventCalendar.save();
       });
-
       res.status(201).json({
         message: "Event saved",
         event: result,
       });
-
-      console.log(user);
     } catch (err) {
       if (!err.statusCode) {
         err.statusCode = 500;
       }
       next(err);
     }
-  }
-  if(title === "Internal Exam") {
+  } else if (title === "Internal Exam") {
     try {
       const user = await User.findByPk(+_id);
       userList = [user._id];
@@ -1378,15 +1372,13 @@ exports.createNewEvent = async (req, res, next) => {
         message: "Event saved",
         event: result,
       });
-    } catch(err) {
+    } catch (err) {
       if (!err.statusCode) {
         err.statusCode = 500;
       }
       next(err);
     }
-  }
-
-  if (title === "Theory Class (Course)") {
+  } else if (title === "Theory Class (Course)") {
     try {
       const users = await User.findAll({
         where: { attendedCourseId: +_id },
@@ -1428,9 +1420,7 @@ exports.createNewEvent = async (req, res, next) => {
       }
       next(err);
     }
-  }
-
-  if (title === "Individual (Instructor)") {
+  } else if (title === "Individual (Instructor)") {
     try {
       const user = await User.findByPk(+_id);
       console.log("individual", user);
@@ -1461,9 +1451,7 @@ exports.createNewEvent = async (req, res, next) => {
       }
       next(err);
     }
-  }
-
-  if (title === "Branch (Instructor)") {
+  } else if (title === "Branch (Instructor)") {
     let activeBranchId;
     try {
       const owner = await User.findByPk(req.userId);
@@ -1474,7 +1462,10 @@ exports.createNewEvent = async (req, res, next) => {
         include: { model: Calendar },
       });
 
-      const branch = await Branch.findOne({where: {_id: activeBranchId}, attributes: ['name']});
+      const branch = await Branch.findOne({
+        where: { _id: activeBranchId },
+        attributes: ["name"],
+      });
 
       let instructorIds = [];
 
@@ -1508,165 +1499,160 @@ exports.createNewEvent = async (req, res, next) => {
       }
       next(err);
     }
+  } else {
+    const error = new Error("Wrong type of class or meeting.");
+    error.statusCode = 404;
+    throw error;
   }
 };
 
 exports.getStudentCalendar = async (req, res, next) => {
   try {
-    const student = await User.findByPk(req.userId);
-    const calendar = await Calendar.findOne({where: {_id: student._id}});
-    const eventsCalendar = await CalendarEvent.findAll({where: {calendarId: calendar._id}});
+    const calendar = await Calendar.findOne({
+      where: { userId: req.userId },
+      include: [
+        { model: User, attributes: ["firstname", "lastname", "_id"] },
+        { model: Event },
+      ],
+    });
+    res
+      .status(200)
+      .json({ message: "message test student calendar", eventList: calendar });
+  } catch (err) {
+    if (!err.statusCode) {
+      err.statusCode = 500;
+    }
+    next(err);
+  }
+};
 
-    let eventsCalendarIds = [];
+exports.getStudentCalendarForInstructor = async (req, res, next) => {
+  try {
+    const selectedStudentId = req.body.userId;
+    const calendar = await Calendar.findOne({
+      where: { userId: selectedStudentId },
+      include: [
+        { model: User, attributes: ["_id", "firstname", "lastname"] },
+        { model: Event },
+      ],
+    });
+    res
+      .status(200)
+      .json({ message: "Calendar of student fetched.", calendar: calendar });
+  } catch (err) {
+    if (!err.statusCode) {
+      err.statusCode = 500;
+    }
+    next(err);
+  }
+};
 
-    eventsCalendarIds = eventsCalendar.map(eventCalendar => {
-      return eventCalendar.eventId;
+exports.getInstructorCalendar = async (req, res, next) => {
+  try {
+    const calendar = await Calendar.findOne({
+      where: { userId: req.userId },
+      include: [
+        { model: User, attributes: ["_id", "firstname", "lastname"] },
+        { model: Event },
+      ],
     });
 
-    console.log(eventsCalendarIds);
-
-    eventList = await Event.findAll({where: {_id: eventsCalendarIds.map(eventCalendarId => {return eventCalendarId})}})
-    
-
-    res.status(200).json({message: 'message test student calendar', eventList: eventList});
-  } catch(err) {
-    if (!err.statusCode) {
-      err.statusCode = 500;
-    }
-    next(err);
-  }
-}
-
-
-exports.getStudentCalendarForInstructor  = async(req, res, next) => {
-  const selectedStudentId = req.body.userId;
-  try {
-    const calendar = await Calendar.findOne({where: {userId: selectedStudentId}, include: [{model: User, attributes: ['_id', 'firstname', 'lastname']}, {model: Event}]});
-
-    res.status(200).json({message: 'Calendar of student fetched.', calendar: calendar})
-  } catch(err) {
-    if (!err.statusCode) {
-      err.statusCode = 500;
-    }
-    next(err);
-  }
-}
-
-
-exports.getInstructorCalendar = async(req, res, next) => {
-  try {
-
-    const calendar = await Calendar.findOne({where: {userId: req.userId}, include: [{model: User, attributes: ['_id', 'firstname', 'lastname']}, {model: Event}]});
-
-    const studentCalendarEvents = await CalendarEvent.findAll({where: {eventId: calendar.events.map(event => {return event._id})}, attributes: ['calendarId', 'eventId']});
+    const studentCalendarEvents = await CalendarEvent.findAll({
+      where: {
+        eventId: calendar.events.map((event) => {
+          return event._id;
+        }),
+      },
+      attributes: ["calendarId", "eventId"],
+    });
 
     console.log(studentCalendarEvents);
 
-    //  const instructor = await User.findByPk(req.userId);
-    //  const calendar = await Calendar.findOne({where: {userId: instructor._id}});
-    //  const eventsCalendar = await CalendarEvent.findAll({where: {calendarId: calendar._id}});
-
-    //  let eventsCalendarIds = [];
-    //  eventsCalendarIds = eventsCalendar.map(eventCalendar => {
-    //   return eventCalendar.eventId;
-    // });
-
-    // eventList = await Event.findAll({where: {_id: eventsCalendarIds.map(eventCalendarId => {return eventCalendarId})}});
-
-    // let selectedEventIds = [];
-    // selectedEventtIds = eventList.map(event => {
-    //   if(event.title === 'Practical Class') {
-    //     selectedEventIds.push(event._id)
-    //   }
-  
-    // });
-
-    // const eventsCalendarStuds = await CalendarEvent.findAll({where: {eventId: selectedEventIds.map(selectedEventId => {return selectedEventId})}});
-
-    // console.log(eventsCalendarStuds)
-
-
-    // const calendarstud = await Calendar.findAll({where: {_id: eventsCalendarStuds.map(eventCalendarStud => {return eventCalendarStud.calendarId})}, include: [User, Event]});
-    // const students = await User.findAll({where: {_id: eventsCalendarStuds.map(eventCalendarStud => {return eventCalendarStud.calendarId}), role: 'student'}});
-
-    // console.log(calendarstud);
-
-
-    // res.status(200).json({message: 'message test student calendar', eventList: eventList, calendar: calendarstud});
-
-  res.status(200).json({calendar: calendar})
-
-    //search for same eventcalendar of my student
-  } catch(err) {
+    res.status(200).json({ calendar: calendar });
+  } catch (err) {
     if (!err.statusCode) {
       err.statusCode = 500;
     }
     next(err);
   }
-}
+};
 
-exports.changeEventStatus = async(req, res, next) => {
-  const {eventId, curStatus} = req.body;
+exports.getCourseCalendar = async (req, res, next) => {};
+
+exports.getBranchCalendar = async (req, res, next) => {};
+
+exports.changeEventStatus = async (req, res, next) => {
+  const { eventId, curStatus } = req.body;
   console.log(eventId, curStatus);
 
   try {
     const event = await Event.findByPk(eventId);
-    if(!curStatus) {
+    if (!curStatus) {
       event.status = true;
     }
-    if(curStatus) {
+    if (curStatus) {
       event.status = false;
     }
 
     const result = await event.save();
 
     res.status(200).json({
-      message: 'Status changed successfully.',
-      result: result
-    })
-  } catch(err) {
+      message: "Status changed successfully.",
+      result: result,
+    });
+  } catch (err) {
     if (!err.statusCode) {
       err.statusCode = 500;
     }
     next(err);
   }
-}
+};
 
-exports.deleteEvent = async(req, res, next) => {
+exports.deleteEvent = async (req, res, next) => {
   const eventId = req.body.eventId;
   try {
     const event = await Event.findByPk(eventId);
     const deleteEvent = await event.destroy();
-    res.status(200).json({message: 'Event deleted.', deleteEvent: deleteEvent});
-  } catch(err) {
+    res
+      .status(200)
+      .json({ message: "Event deleted.", deleteEvent: deleteEvent });
+  } catch (err) {
     if (!err.statusCode) {
       err.statusCode = 500;
     }
     next(err);
   }
-}
+};
 
-exports.getStudentListOfSelectedInstructor = async(req, res, next) => {
+exports.getStudentListOfSelectedInstructor = async (req, res, next) => {
   const userId = req.body.userId;
   try {
-    const students = await User.findAll({where: {assignedInstructorId: userId}, attributes: ['_id', 'firstname', 'lastname']});
-    const calendar = await Calendar.findOne({where: {userId: userId}, include: [{model: User, attributes: ['_id', 'firstname', 'lastname']}, {model: Event}]});
-    
-    res.status(200).json({message: 'Student list of selected instructor fetched.', students: students, calendar: calendar})
+    const students = await User.findAll({
+      where: { assignedInstructorId: userId },
+      attributes: ["_id", "firstname", "lastname"],
+    });
+    const calendar = await Calendar.findOne({
+      where: { userId: userId },
+      include: [
+        { model: User, attributes: ["_id", "firstname", "lastname"] },
+        { model: Event },
+      ],
+    });
 
-  } catch(err) {
+    res.status(200).json({
+      message: "Student list of selected instructor fetched.",
+      students: students,
+      calendar: calendar,
+    });
+  } catch (err) {
     if (!err.statusCode) {
       err.statusCode = 500;
     }
     next(err);
   }
-}
+};
 
-
-
-
-
-
+exports.getStudentListOfSelectedCourse = async (req, res, next) => {};
 
 //
 exports.addCategory = (req, res, next) => {

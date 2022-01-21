@@ -112,7 +112,6 @@ exports.login = (req, res, next) => {
         {
           userId: loadedUser._id,
           email: loadedUser.email,
-          password: loadedUser.password,
           role: loadedUser.role,
         },
         "liSenseAppEngineerSecret",

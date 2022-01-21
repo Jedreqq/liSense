@@ -8,9 +8,6 @@ import classes from "./Mailbox.module.css";
 import React from "react";
 
 const Mailbox = (props) => {
-  // const [messages, setMessages] = useState({
-  //   messages: [],
-  // });
   const [pageNumber, setPageNumber] = useState(0);
   const [isLoaded, setIsLoaded] = useState(true);
   const {loadMailbox, messages } = useContext(messageContext);
@@ -51,17 +48,6 @@ const Mailbox = (props) => {
               <td>Actions</td>
             </tr>
             {showMessages} 
-            {/* {messages.messages.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).map((message) => (
-              <Message
-              loginStatus={props.loginStatus}
-              key={message._id}
-              id={message._id}
-              topic={message.topic}
-              sender={message.sender}
-              createdAt={message.createdAt}
-              received={message.received}
-              />
-            ))} */}
           </tbody>
          
         </table>

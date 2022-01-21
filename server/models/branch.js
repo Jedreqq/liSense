@@ -1,6 +1,7 @@
 const { Sequelize, DataTypes } = require("sequelize");
 
 const sequelize = require("../util/database");
+const School = require("./school");
 
 const Branch = sequelize.define("branch", {
   _id: {
@@ -30,5 +31,8 @@ const Branch = sequelize.define("branch", {
     allowNull: false,
   },
 });
+
+School.hasMany(Branch);
+Branch.belongsTo(School);
 
 module.exports = Branch;

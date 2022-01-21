@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import Loader from "../../components/Loader/Loader";
 import Payment from "../../components/Payment/Payment";
 import classes from "./Payments.module.css";
+import ReactPaginate from 'react-paginate';
 
 const Payments = (props) => {
   const [payments, setPayments] = useState({
@@ -10,6 +11,9 @@ const Payments = (props) => {
 
   const [isChanged, setIsChanged] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [pageNumber, setPageNumber] = useState(0);
+  const paymentsPerPage = 10;
+  const pagesVisited = pageNumber * paymentsPerPage;
 
   const loadPayments = useCallback(async () => {
     try {
@@ -46,11 +50,32 @@ const Payments = (props) => {
     setIsChanged(true);
   };
 
+  const pageCount = Math.ceil(payments.payments.length / paymentsPerPage);
+  const changeCurrentPage = ({selected}) => {
+    setPageNumber(selected)
+  }
+
+  const showPayments = payments.payments.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)).slice(pagesVisited, pagesVisited + paymentsPerPage).map((payment) => (
+    <Payment
+      onChanged={changePayment}
+      loginStatus={props.loginStatus}
+      key={payment._id}
+      id={payment._id}
+      courseName={payment.name}
+      price={payment.price}
+      status={payment.status}
+      statusUpdateDate={payment.updatedAt}
+      user={payment.user}
+    />
+  ));
+
   return isLoaded ?
     <div>
       <h2>Payments in branch</h2>
       {payments.payments.length === 0 && <p>No payments in branch.</p>}
       {payments.payments.length > 0 && (
+        <React.Fragment>
+
         <table className={classes.table}>
           <tbody>
             <tr>
@@ -61,21 +86,24 @@ const Payments = (props) => {
               <th>Last Updated</th>
               <th>Actions</th>
             </tr>
-            {payments.payments.map((payment) => (
+            {showPayments}
+            {/* {payments.payments.map((payment) => (
               <Payment
-                onChanged={changePayment}
-                loginStatus={props.loginStatus}
-                key={payment._id}
-                id={payment._id}
-                courseName={payment.name}
-                price={payment.price}
-                status={payment.status}
-                statusUpdateDate={payment.updatedAt}
-                user={payment.user}
+              onChanged={changePayment}
+              loginStatus={props.loginStatus}
+              key={payment._id}
+              id={payment._id}
+              courseName={payment.name}
+              price={payment.price}
+              status={payment.status}
+              statusUpdateDate={payment.updatedAt}
+              user={payment.user}
               />
-            ))}
+            ))} */}
           </tbody>
         </table>
+        <ReactPaginate previousLabel={"Previous"} nextLabel={"Next"} pageCount={pageCount} onPageChange={changeCurrentPage} containerClassName={classes.pagination} previousLinkClassName={classes.previousBtn} nextLinkClassName={classes.nextBtn} disabledClassName={classes.paginationDisabled} activeClassName={classes.activePagination} />
+      </React.Fragment>
       )}
     </div> : <div className={classes.centered}> <Loader /> </div>
 };

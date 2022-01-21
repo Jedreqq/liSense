@@ -43,14 +43,13 @@ const EventComponent = ({ event }) => {
   const handleOpen = (e) => {
     e.preventDefault();
     setIsOpened(true);
-    setIsChanged(true)
-
+    setIsChanged(true);
   };
 
   const handleClose = (e) => {
     e.preventDefault();
     setIsOpened(false);
-    setIsChanged(true)
+    setIsChanged(true);
   };
 
   const changeEventStatus = (e, curStatus) => {
@@ -77,7 +76,7 @@ const EventComponent = ({ event }) => {
       })
       .then((resData) => {
         console.log(resData);
-        event.status === false ? event.status = true : event.status = false;
+        event.status === false ? (event.status = true) : (event.status = false);
         setIsChanged(true);
         setIsOpened(false);
       })
@@ -86,36 +85,37 @@ const EventComponent = ({ event }) => {
       });
   };
 
-  const deleteEventHandler = e => {
-    fetch('http://localhost:3001/deleteEvent', {
-      method: 'PATCH',
+  const deleteEventHandler = (e) => {
+    fetch("http://localhost:3001/deleteEvent", {
+      method: "PATCH",
       headers: {
         Authorization: "Bearer " + event.props.loginStatus.token,
         "Content-Type": "application/json",
-      }, 
+      },
       body: JSON.stringify({
-        eventId: event._id
+        eventId: event._id,
+      }),
+    })
+      .then((res) => {
+        if (res.status === 422) {
+          throw new Error("Validation failed.");
+        }
+        if (res.status !== 200 && res.status !== 201) {
+          console.log("Error!");
+          throw new Error("Deleting failed!");
+        }
+        return res.json();
       })
-    }).then((res) => {
-      if (res.status === 422) {
-        throw new Error("Validation failed.");
-      }
-      if (res.status !== 200 && res.status !== 201) {
-        console.log("Error!");
-        throw new Error("Deleting failed!");
-      }
-      return res.json();
-    })
-    .then((resData) => {
-      console.log(resData);
-      setIsChanged(true);  
-      window.location.reload();
-      setIsOpened(false);
-    })
-    .catch((err) => {
-      console.log(err);
-    });
-  }
+      .then((resData) => {
+        console.log(resData);
+        setIsChanged(true);
+        window.location.reload();
+        setIsOpened(false);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  };
 
   useEffect(() => setIsChanged(false), [setIsChanged]);
 
@@ -125,20 +125,30 @@ const EventComponent = ({ event }) => {
       <div onClick={handleOpen}>
         {event.status === false && (
           <div className={classes.EventComponent}>
-            <span>{event.title}</span><br/>
-            <span style={{fontSize: 10}}>{event.description.split(',')[0]}</span><br/>
-            <span style={{fontSize: 10}}>{event.description.split(',')[1]}</span>
-          
+            <span>{event.title}</span>
+            <br />
+            <span style={{ fontSize: 10 }}>
+              {event.description.split(",")[0]}
+            </span>
+            <br />
+            <span style={{ fontSize: 10 }}>
+              {event.description.split(",")[1]}
+            </span>
           </div>
         )}
         {event.status === true && (
           <div
             style={{ backgroundColor: "green", padding: 2, borderRadius: 2 }}
           >
-            <span>{event.title}</span><br/>
-            <span style={{fontSize: 10}}>{event.description.split(',')[0]}</span><br/>
-            <span style={{fontSize: 10}}>{event.description.split(',')[1]}</span>
-
+            <span>{event.title}</span>
+            <br />
+            <span style={{ fontSize: 10 }}>
+              {event.description.split(",")[0]}
+            </span>
+            <br />
+            <span style={{ fontSize: 10 }}>
+              {event.description.split(",")[1]}
+            </span>
           </div>
         )}
       </div>
@@ -155,84 +165,35 @@ const EventComponent = ({ event }) => {
             backgroundColor: event.status === false ? "red" : "lightgreen",
           }}
         >
-          {event.props.loginStatus.userRole === "student" && (
-            <div>
-              <br />
-              <span id="title" className={classes.dateTime}>
-                {event.title}
-              </span>
-              <h3>Details:</h3>
-              <h5>Status</h5>
-              <span className={classes.dateTime}>
-                {event.status.toString() === "false"
-                  ? "Not completed"
-                  : "Completed"}
-              </span>
-              <h5>Date:</h5>
-              <span className={classes.dateTime}>
-                {event.start.toISOString().slice(0, 16).replace("T", " ")} -{" "}
-                {event.end.toISOString().slice(0, 16).replace("T", " ")}
-              </span>
-              <h5>Descripton:</h5>
-              <span className={classes.dateTime}>{event.description}</span>
-            </div>
-          )}
-          {event.props.loginStatus.userRole === "instructor" && (
-            <div>
-              <br />
-              <span id="title" className={classes.dateTime}>
-                {event.title}
-              </span>
-              <h3>Details:</h3>
-              <h5>Status</h5>
-              <span className={classes.dateTime}>
-                {event.status.toString() === "false"
-                  ? "Not completed"
-                  : "Completed"}
-              </span>
-              <h5>Date:</h5>
-              <span className={classes.dateTime}>
-                {event.start.toISOString().slice(0, 16).replace("T", " ")} -{" "}
-                {event.end.toISOString().slice(0, 16).replace("T", " ")}
-              </span>
-              <h5>Descripton:</h5>
-              <span className={classes.dateTime}>{event.description}</span>
-              <Button onClick={(e) => changeEventStatus(e, event.status)}>
-                Change Status
-              </Button>
-              <Button onClick={deleteEventHandler}>
-                Delete Event
-              </Button>
-            </div>
-          )}
-          {event.props.loginStatus.userRole === "owner" && (
-            <div>
-              <br />
-              <span id="title" className={classes.dateTime}>
-                {event.title}
-              </span>
-              <h3>Details:</h3>
-              <h5>Status</h5>
-              <span className={classes.dateTime}>
-                {event.status.toString() === "false"
-                  ? "Not completed"
-                  : "Completed"}
-              </span>
-              <h5>Date:</h5>
-              <span className={classes.dateTime}>
-                {event.start.toISOString().slice(0, 16).replace("T", " ")} -{" "}
-                {event.end.toISOString().slice(0, 16).replace("T", " ")}
-              </span>
-              <h5>Descripton:</h5>
-              <span className={classes.dateTime}>{event.description}</span>
-              <Button onClick={(e) => changeEventStatus(e, event.status)}>
-                Change Status
-              </Button>
-              <Button onClick={deleteEventHandler}>
-                Delete Event
-              </Button>
-            </div>
-          )}
+          <div>
+            <br />
+            <span id="title" className={classes.dateTime}>
+              {event.title}
+            </span>
+            <h3>Details:</h3>
+            <h5>Status</h5>
+            <span className={classes.dateTime}>
+              {event.status.toString() === "false"
+                ? "Not completed"
+                : "Completed"}
+            </span>
+            <h5>Date:</h5>
+            <span className={classes.dateTime}>
+              {event.start.toISOString().slice(0, 16).replace("T", " ")} -{" "}
+              {event.end.toISOString().slice(0, 16).replace("T", " ")}
+            </span>
+            <h5>Descripton:</h5>
+            <span className={classes.dateTime}>{event.description}</span>
+            {(event.props.loginStatus.userRole === "instructor" ||
+              event.props.loginStatus.userRole === "owner") && (
+              <React.Fragment>
+                <Button onClick={(e) => changeEventStatus(e, event.status)}>
+                  Change Status
+                </Button>
+                <Button onClick={deleteEventHandler}>Delete Event</Button>
+              </React.Fragment>
+            )}
+          </div>
         </Box>
       </StyledModal>
     </React.Fragment>
