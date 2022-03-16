@@ -102,9 +102,33 @@ const Fleet = (props) => {
         )}
         <h2>Vehicles in branch</h2>
         {vehicles.vehicles.length === 0 && <p>No vehicles in branch.</p>}
-        {vehicles.vehicles.length > 0 && showVehicles}
+        {vehicles.vehicles.length > 0 && (
+          <table className={classes.table}>
+            <tbody>
+              <tr>
+                <th>Model</th>
+                <th>Brand</th>
+                <th>Year</th>
+                <th>Registration Plate</th>
+                <th>Categories</th>
+                <th>Actions</th>
+              </tr>
+              {showVehicles}
+            </tbody>
+          </table>
+        )}
       </div>
-      <ReactPaginate previousLabel={"Previous"} nextLabel={"Next"} pageCount={pageCount} onPageChange={changeCurrentPage} containerClassName={classes.pagination} previousLinkClassName={classes.previousBtn} nextLinkClassName={classes.nextBtn} disabledClassName={classes.paginationDisabled} activeClassName={classes.activePagination} />
+      <ReactPaginate
+        previousLabel={"Previous"}
+        nextLabel={"Next"}
+        pageCount={pageCount}
+        onPageChange={changeCurrentPage}
+        containerClassName={classes.pagination}
+        previousLinkClassName={classes.previousBtn}
+        nextLinkClassName={classes.nextBtn}
+        disabledClassName={classes.paginationDisabled}
+        activeClassName={classes.activePagination}
+      />
     </div>
   ) : (
     <div className={classes.centered}>

@@ -1,4 +1,4 @@
-import react from "react";
+
 import ButtonLink from "../ButtonLink/ButtonLink";
 
 import classes from "./Message.module.css";
@@ -8,7 +8,7 @@ const Message = (props) => {
     <tr className={classes.messageSection}>
       <td
         className={props.received ? classes.readMessage : classes.message}
-      >{`${props.sender.firstname} ${props.sender.lastname}`}</td>
+      >{props.topic}</td>
       <td className={props.received ? classes.readMessage : classes.message}>
         {props.createdAt
           ? props.createdAt.slice(0, 16).replace("T", " ")
@@ -16,7 +16,7 @@ const Message = (props) => {
       </td>
 
       <td className={props.received ? classes.readMessage : classes.message}>
-        {props.topic}
+      {`${props.sender.firstname} ${props.sender.lastname}`}
       </td>
       <td>
 

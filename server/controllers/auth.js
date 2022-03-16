@@ -9,10 +9,11 @@ const Calendar = require("../models/calendar");
 
 exports.signup = (req, res, next) => {
   const errors = validationResult(req);
+  console.log(errors);
   if (!errors.isEmpty()) {
-    const error = new Error("Validation failed.");
+    const error = new Error(errors.array());
     error.statusCode = 422;
-    error.data = errors.array();
+   // error.data = errors.array();
     throw error;
   }
   const role = req.body.role;
@@ -26,7 +27,6 @@ exports.signup = (req, res, next) => {
   let categories;
   if (role === "instructor") {
     categories = req.body.categories;
-    //     const categories = req.body.categories;
   }
   let user;
   let mailbox;
@@ -81,7 +81,6 @@ exports.signup = (req, res, next) => {
     .catch((err) => {
       if (!err.statusCode) {
         res.json({ message: err.message });
-        res.json({ message: "Server is here man." });
         err.statusCode = 500;
       }
       next(err);

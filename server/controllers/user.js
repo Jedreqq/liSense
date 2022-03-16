@@ -1506,7 +1506,7 @@ exports.createNewEvent = async (req, res, next) => {
   }
 };
 
-exports.getStudentCalendar = async (req, res, next) => {
+exports.getUserCalendar = async (req, res, next) => {
   try {
     const calendar = await Calendar.findOne({
       where: { userId: req.userId },
@@ -1547,29 +1547,31 @@ exports.getStudentCalendarForInstructor = async (req, res, next) => {
   }
 };
 
-exports.getInstructorCalendar = async (req, res, next) => {
+exports.getCourseCalendar = async (req, res, next) => {
   try {
-    const calendar = await Calendar.findOne({
-      where: { userId: req.userId },
-      include: [
-        { model: User, attributes: ["_id", "firstname", "lastname"] },
-        { model: Event },
-      ],
+    const selectedCourseId = req.body.courseId;
+    const usersList = await User.findAll({where: {attendedCourseId: selectedCourseId}});
+    let userIds = [];
+    userIds = usersList.map(user => {return user._id});
+
+    const calendar = await Calendar.findAll({
+      where: {userId: userIds.map(id => {return id})}, include: [{model: Event}]
     });
+    
+    let events = [];
+    events = calendar.map(calendar => calendar.events.map(event => {
+      return event._id
+    }));
 
-    const studentCalendarEvents = await CalendarEvent.findAll({
-      where: {
-        eventId: calendar.events.map((event) => {
-          return event._id;
-        }),
-      },
-      attributes: ["calendarId", "eventId"],
-    });
+    const arr = Array.prototype.concat(...events);
+    const uniqueIds = Array.from(new Set(arr));
+    const eventListCourse = await Event.findAll({where: {_id: uniqueIds.map(id => {return id})}});
 
-    console.log(studentCalendarEvents);
+    res.status(200).json({message: "Course calendar be like", events: events, eventListCourse: eventListCourse});
 
-    res.status(200).json({ calendar: calendar });
-  } catch (err) {
+
+
+  } catch(err) {
     if (!err.statusCode) {
       err.statusCode = 500;
     }
@@ -1577,9 +1579,37 @@ exports.getInstructorCalendar = async (req, res, next) => {
   }
 };
 
-exports.getCourseCalendar = async (req, res, next) => {};
+exports.getBranchCalendar = async (req, res, next) => {
+  let activeBranchId;
+  try {
+    const owner = await User.findByPk(req.userId);
+    activeBranchId = owner.activeBranchId;
+    const usersList = await User.findAll({where: {memberId: activeBranchId}});
+    let userIds = [];
+    userIds = usersList.map(user => {return user._id});
 
-exports.getBranchCalendar = async (req, res, next) => {};
+    const calendar = await Calendar.findAll({
+      where: {userId: userIds.map(id => {return id})}, include: [
+        {model: Event}
+      ]
+    });
+    let events = [];
+    events = calendar.map(calendar => calendar.events.map(event => {
+      return event._id
+    }));
+    const arr = Array.prototype.concat(...events);
+    const uniqueIds = Array.from(new Set(arr));
+    const eventListBranch = await Event.findAll({where: {_id: uniqueIds.map(id => {return id})}});
+
+    res.status(200).json({message: "branch calendar be like", events: events, eventListBranch: eventListBranch});
+
+  } catch(err) {
+    if (!err.statusCode) {
+      err.statusCode = 500;
+    }
+    next(err);
+  }
+};
 
 exports.changeEventStatus = async (req, res, next) => {
   const { eventId, curStatus } = req.body;

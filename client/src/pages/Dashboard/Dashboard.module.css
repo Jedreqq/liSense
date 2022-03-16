@@ -57,3 +57,19 @@ div:last-child button {
   color: white;
   background-color: darkblue;
 }
+
+.table {
+  width: 100%;
+  box-shadow: rgba(0, 0, 0, 0.666) 3px 2px 8px;
+} 
+.table, th, td {
+  border: 1px solid black;
+  padding: 1px 2px;
+} 
+
+.centered {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}

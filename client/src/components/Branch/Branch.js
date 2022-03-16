@@ -40,22 +40,17 @@ const Branch = (props) => {
   };
 
   return (
-    <article
-      className={
+<tr className={
        ( props.loginStatus.userRole === "owner" &&
         (+props.id === +props.activeBranch
           ? classes.singleBranchActive
           : classes.singleBranch)) || ((props.loginStatus.userRole === "instructor" || props.loginStatus.userRole === 'student') && (+props.id === +props.BranchRequestId ? classes.singleBranchActive : classes.singleBranch))
-      }
-    >
-      <div>
-        <header>
-          <h2>
-            {` ${props.name}, ${props.address}, ${props.postalCode} ${props.city}`}
-          </h2>
-          <p>{props.phoneNumber}</p>
-        </header>
-      </div>
+      }>
+      <td>{`${props.name}`}</td>
+      <td>{props.address}</td>
+      <td>{props.city}</td>
+      <td>{props.phoneNumber}</td>
+      <td>
       {isOwner && +props.id !== +props.activeBranch && (
         <Button onClick={(e) => props.onActiveBranchChange(e, props.id)}>
           Set as Active
@@ -63,15 +58,49 @@ const Branch = (props) => {
       )}
       {isOwner && +props.id === +props.activeBranch && (
         <Button disabled>Active Branch</Button>
-      )}
+        )}
 
       {isStudentOrInstructor && +props.id !== +props.BranchRequestId && (
         <Button onClick={applyToBranchHandler}>Apply to School</Button>
-      )}
+        )}
       {isStudentOrInstructor && +props.id === +props.BranchRequestId && (
         <Button disabled>Currently applied</Button>
-      )}
-    </article>
+        )}
+      </td>
+
+    </tr>
+    // <article
+    //   className={
+      //    ( props.loginStatus.userRole === "owner" &&
+      //     (+props.id === +props.activeBranch
+      //       ? classes.singleBranchActive
+      //       : classes.singleBranch)) || ((props.loginStatus.userRole === "instructor" || props.loginStatus.userRole === 'student') && (+props.id === +props.BranchRequestId ? classes.singleBranchActive : classes.singleBranch))
+      //   }
+      // >
+      //   <div>
+    //     <header>
+    //       <h2>
+    //         {` ${props.name}, ${props.address}, ${props.postalCode} ${props.city}`}
+    //       </h2>
+    //       <p>{props.phoneNumber}</p>
+    //     </header>
+    //   </div>
+    //   {isOwner && +props.id !== +props.activeBranch && (
+    //     <Button onClick={(e) => props.onActiveBranchChange(e, props.id)}>
+    //       Set as Active
+    //     </Button>
+    //   )}
+    //   {isOwner && +props.id === +props.activeBranch && (
+    //     <Button disabled>Active Branch</Button>
+    //   )}
+
+    //   {isStudentOrInstructor && +props.id !== +props.BranchRequestId && (
+    //     <Button onClick={applyToBranchHandler}>Apply to School</Button>
+    //   )}
+    //   {isStudentOrInstructor && +props.id === +props.BranchRequestId && (
+    //     <Button disabled>Currently applied</Button>
+    //   )}
+    // </article>
   );
 };
 

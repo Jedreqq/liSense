@@ -136,7 +136,6 @@ const Schedule = (props) => {
 
   const newEventHandler = async (e) => {
     e.preventDefault();
-    // setAllEvents([...allEvents, newEvent]);
     console.log(newEvent);
     try {
       const res = await fetch("http://localhost:3001/createNewEvent", {
@@ -168,44 +167,105 @@ const Schedule = (props) => {
     setIsChanged(true);
   };
 
-  const loadStudentEvents = useCallback(async () => {
-    if (props.loginStatus.userRole === "student") {
-      try {
-        const res = await fetch("http://localhost:3001/getStudentCalendar", {
-          headers: {
-            Authorization: "Bearer " + props.loginStatus.token,
-          },
-        });
-        if (res.status !== 200) {
-          throw new Error("Failed to fetch courses.");
-        }
-
-        const resData = await res.json();
-        console.log(resData);
-        setAllStudentEvents(
-          resData.eventList.events.map((event) => {
-            return {
-              ...event
-            };
-          })
-        );
-
-        setAllEvents(
-          resData.eventList.events.map((event) => ({
-            _id: event._id,
-            title: event.title,
-            start: moment(event.startDate).toDate(),
-            end: moment(event.endDate).toDate(),
-            status: event.status,
-            description: event.description,
-            props: props,
-          }))
-        );
-      } catch (err) {
-        console.log(err);
+  const loadUserEvents = useCallback(async () => {
+    try {
+      const res = await fetch("http://localhost:3001/getUserCalendar", {
+        headers: {
+          Authorization: "Bearer " + props.loginStatus.token,
+        },
+      });
+      if (res.status !== 200) {
+        throw new Error("Failed to fetch courses.");
       }
+
+      const resData = await res.json();
+      console.log(resData);
+      setAllStudentEvents(
+        resData.eventList.events.map((event) => {
+          return {
+            ...event,
+          };
+        })
+      );
+
+      setAllEvents(
+        resData.eventList.events.map((event) => ({
+          _id: event._id,
+          title: event.title,
+          start: moment(event.startDate).toDate(),
+          end: moment(event.endDate).toDate(),
+          status: event.status,
+          description: event.description,
+          props: props,
+        }))
+      );
+    } catch (err) {
+      console.log(err);
     }
   }, [props]);
+
+  const getBranchCalendar = useCallback(async () => {
+    try {
+      const res = await fetch("http://localhost:3001/getBranchCalendar", {
+        headers: {
+          Authorization: "Bearer " + props.loginStatus.token,
+        },
+      });
+      if (res.status !== 200) {
+        throw new Error("Failed to fetch courses.");
+      }
+
+      const resData = await res.json();
+      console.log(resData);
+      setAllEvents(
+        resData.eventListBranch.map((event) => ({
+          _id: event._id,
+          title: event.title,
+          start: moment(event.startDate).toDate(),
+          end: moment(event.endDate).toDate(),
+          status: event.status,
+          description: event.description,
+          props: props,
+        }))
+      );
+    } catch (err) {}
+  }, [props, setAllEvents]);
+
+  const setCourseEvents = async (e) => {
+    try {
+      if (e.target.value === "All Courses") {
+        return getBranchCalendar();
+      }
+      setSelectedCourse(e.target.value);
+      const res = await fetch("http://localhost:3001/getCourseCalendar", {
+        method: "POST",
+        headers: {
+          Authorization: "Bearer " + props.loginStatus.token,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          courseId: e.target.value,
+        }),
+      });
+      if (res.status !== 200) {
+        throw new Error("Failed to fetch course.");
+      }
+
+      const resData = await res.json();
+      console.log(resData);
+      setAllEvents(
+        resData.eventListCourse.map((event) => ({
+          _id: event._id,
+          title: event.title,
+          start: moment(event.startDate).toDate(),
+          end: moment(event.endDate).toDate(),
+          status: event.status,
+          description: event.description,
+          props: props,
+        }))
+      );
+    } catch (err) {}
+  };
 
   const loadCourses = useCallback(async () => {
     if (props.loginStatus.userRole === "owner") {
@@ -285,9 +345,20 @@ const Schedule = (props) => {
   }, [props.loginStatus.token, props.loginStatus.userRole]);
 
   const setSelectedStudentHandlerForInstructor = (e) => {
-    if (document.getElementById("first")) {
-      document.getElementById("first").remove();
+    if (
+      e.target.value === "All Students" &&
+      props.loginStatus.userRole === "owner"
+    ) {
+      return getBranchCalendar();
+    } else if (
+      e.target.value === "All Students" &&
+      props.loginStatus.userRole === "instructor"
+    ) {
+      return loadUserEvents();
     }
+    // if (document.getElementById("first")) {
+    //   document.getElementById("first").remove();
+    // }
     setSelectedStudent(e.target.value);
     setNewEvent({
       ...newEvent,
@@ -325,8 +396,8 @@ const Schedule = (props) => {
   };
 
   const setSelectedInstructorHandler = (e) => {
-    if (document.getElementById("first")) {
-      document.getElementById("first").remove();
+    if (e.target.value === "Select Instructor") {
+      return getBranchCalendar();
     }
     setSelectedInstructor(e.target.value);
     fetch("http://localhost:3001/getStudentListOfSelectedInstructor", {
@@ -364,15 +435,25 @@ const Schedule = (props) => {
       .catch((err) => console.log(err));
   };
 
-
-  useEffect(
-    () =>
-      loadCourses().then((x) =>
-        loadStudentEvents().then((x) => getStudentsOfInstructorList())
-      ),
-    [loadCourses, loadStudentEvents, getStudentsOfInstructorList]
-  );
-
+  useEffect(() => {
+    if (props.loginStatus.userRole === "owner") {
+      getBranchCalendar().then((x) =>
+        loadCourses().then((x) => getStudentsOfInstructorList())
+      );
+    }
+    if (props.loginStatus.userRole === "student") {
+      loadUserEvents();
+    }
+    if (props.loginStatus.userRole === "instructor") {
+      loadUserEvents().then((x) => getStudentsOfInstructorList());
+    }
+  }, [
+    loadUserEvents,
+    getBranchCalendar,
+    loadCourses,
+    getStudentsOfInstructorList,
+    props.loginStatus.userRole,
+  ]);
 
   return (
     <div>
@@ -380,8 +461,7 @@ const Schedule = (props) => {
         <select
           selected="selected"
           value={
-            selectedStudent === undefined ||
-            selectedStudent === "Select Student"
+            selectedStudent === undefined || selectedStudent === "All Students"
               ? ""
               : selectedStudent._id
           }
@@ -389,7 +469,7 @@ const Schedule = (props) => {
           id="student"
           onChange={setSelectedStudentHandlerForInstructor}
         >
-          <option id="firstStudent">Select Student</option>
+          <option id="firstStudent">All Students</option>
           {studentsOfInstructor.map((student) => {
             return (
               <option
@@ -403,6 +483,26 @@ const Schedule = (props) => {
 
       {props.loginStatus.userRole === "owner" && (
         <div>
+          <select
+            selected="selected"
+            value={
+              selectedCourse === undefined || selectedCourse === "All Courses"
+                ? ""
+                : selectedCourse._id
+            }
+            name="course"
+            id="course"
+            onChange={setCourseEvents}
+          >
+            <option id="allCourses">All Courses</option>
+            {availableCourses.map((course) => {
+              return (
+                <option key={course._id} value={course._id}>
+                  {course.name}
+                </option>
+              );
+            })}
+          </select>
           <select
             selected="selected"
             value={
@@ -430,7 +530,7 @@ const Schedule = (props) => {
               selected="selected"
               value={
                 selectedStudent === undefined ||
-                selectedStudent === "Select Student"
+                selectedStudent === "All Students"
                   ? ""
                   : selectedStudent._id
               }
@@ -438,7 +538,7 @@ const Schedule = (props) => {
               id="student"
               onChange={setSelectedStudentHandlerForInstructor}
             >
-              <option id="firstStudent">Select Student</option>
+              <option id="firstStudent">All Students</option>
               {studentsOfInstructor.map((student) => {
                 return (
                   <option
@@ -592,7 +692,7 @@ const Schedule = (props) => {
                     selected={newEvent.end}
                     onChange={(end) => setNewEvent({ ...newEvent, end })}
                   />
-                  <Button type="Submit">Add Event</Button>
+                  <Button className={classes.submitBtn} type="Submit">Add Event</Button>
                 </form>
               </div>
             </Box>

@@ -27,7 +27,7 @@ const Branches = (props) => {
   };
 
   const [pageNumber, setPageNumber] = useState(0);
-  const branchesPerPage = 3;
+  const branchesPerPage = 5;
   const pagesVisited = pageNumber * branchesPerPage;
 
   const showBranches = branchesInfo.branches
@@ -113,7 +113,20 @@ const Branches = (props) => {
           <br />
         </div>
       )}
-      {branchesInfo.branches.length > 0 && showBranches}
+      {branchesInfo.branches.length > 0 &&  (
+              <table className={classes.table}>
+            <tbody>
+              <tr>
+                <th>Branch</th>
+                <th>Address</th>
+                <th>City</th>
+                <th>Phone Number</th>
+                <th>Actions</th>
+              </tr>
+              {showBranches}
+            </tbody>
+          </table>
+            )}
     </div>
     <ReactPaginate previousLabel={"Previous"} nextLabel={"Next"} pageCount={pageCount} onPageChange={changeCurrentPage} containerClassName={classes.pagination} previousLinkClassName={classes.previousBtn} nextLinkClassName={classes.nextBtn} disabledClassName={classes.paginationDisabled} activeClassName={classes.activePagination} />
       </React.Fragment>

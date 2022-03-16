@@ -12,7 +12,7 @@ const Mailbox = (props) => {
   const [isLoaded, setIsLoaded] = useState(true);
   const {loadMailbox, messages } = useContext(messageContext);
 
-  const messagesPerPage = 10;
+  const messagesPerPage = 8;
   const pagesVisited = pageNumber * messagesPerPage;
 
   const showMessages = messages.messages.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(pagesVisited, pagesVisited + messagesPerPage).map((message) => { return (
@@ -42,9 +42,9 @@ const Mailbox = (props) => {
         <table className={classes.table}>
           <tbody>
             <tr>
-              <td>Sender</td>
-              <td>Date</td>
               <td>Topic</td>
+              <td>Date</td>
+              <td>Sender</td>
               <td>Actions</td>
             </tr>
             {showMessages} 

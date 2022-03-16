@@ -42,7 +42,7 @@ function App() {
 
   const [activeBranch, setActiveBranch] = useState(null);
   const [memberId, setMemberId] = useState(null);
-  // const [notificationCount, setNotificationCount] = useState(0);
+  const [error, setError] = useState(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const onMessageReceived = useRef(() => {});
 
@@ -63,14 +63,12 @@ function App() {
   }, []);
 
   const checkLoginStatus = useCallback(async () => {
-    console.log("checkLoginStatusRerender");
     const token = localStorage.getItem("token");
     const expireDate = localStorage.getItem("expireDate");
     if (!token || !expireDate) {
       return;
     }
     if (new Date(expireDate) <= new Date()) {
-      console.log("logout");
       logoutHandler();
       return;
     }
@@ -121,8 +119,6 @@ function App() {
     };
   }, [isLoaded, loginStatus.isAuth, loginStatus.token]);
 
-  console.log(memberId);
-
   const activeBranchHandler = (e, activeBranch) => {
     e.preventDefault();
     setActiveBranch(activeBranch);
@@ -162,22 +158,21 @@ function App() {
       }),
     })
       .then((res) => {
-        if (res.status === 422) {
+        if(!res.ok) {
           throw new Error(
-            "Validation failed. Make sure the email address isn't used yet!"
-          );
-        }
-        if (res.status !== 200 && res.status !== 201) {
-          console.log("Error!");
-          throw new Error("Creating a user failed!");
+               "Validation failed. Make sure the email address isn't used yet!"
+               );
+ 
         }
         return res.json();
       })
       .then((resData) => {
         navigate("/login");
       })
-      .catch((err) => console.log(err));
+      .catch((err) => setError(err));
   };
+
+
 
   const loginHandler = (e, loginData) => {
     e.preventDefault();

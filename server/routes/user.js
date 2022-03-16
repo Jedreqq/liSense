@@ -116,7 +116,11 @@ router.post('/createNewEvent', verifyToken, userController.createNewEvent);
 router.get('/getInstructorsForSchedule', verifyToken, userController.getInstructorsForSchedule)
 
 ///calendar get
-router.get('/getStudentCalendar', verifyToken, isStudent, userController.getStudentCalendar);
+router.get('/getBranchCalendar', verifyToken, isOwner, userController.getBranchCalendar);
+
+router.post('/getCourseCalendar', verifyToken, isOwner, userController.getCourseCalendar);
+
+router.get('/getUserCalendar', verifyToken, isStudentOrInstructor, userController.getUserCalendar);
 
 router.post('/getStudentCalendarForInstructor', verifyToken, userController.getStudentCalendarForInstructor)
 

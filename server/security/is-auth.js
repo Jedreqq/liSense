@@ -105,7 +105,14 @@ isStudentOrInstructor = (req, res, next) => {
 };
 
 isInstructorOrOwner = (req, res, next) => {
-  
+  User.findByPk(req.userId).then((user) => {
+    if (user.role === "owner" || user.role === "instructor") {
+      next();
+      return;
+    }
+    res.status(403).send({ message: "Require owner or instructor role." });
+  });
+  return;
 }
 
 const authJwt = {

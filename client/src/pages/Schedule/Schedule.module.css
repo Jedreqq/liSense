@@ -15,3 +15,14 @@
   resize: none;
   height: 10rem;
 }
+
+
+input[type="text"] {
+  display: block;
+  margin: 10px auto;
+}
+
+.submitBtn {
+  display: block;
+  margin: 10px auto;
+}

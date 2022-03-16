@@ -105,7 +105,9 @@ const Payment = (props) => {
       )}{" "}
       {msg}
       {paymentData.status === "paid" && (
-        <div>You already paid for the course.</div>
+        <div>
+          <p>You already paid for the course.</p>
+        </div>
       )}
     </div>
   ) : (
